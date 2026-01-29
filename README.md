@@ -43,13 +43,3 @@ allows real-time player intervention to contain outbreaks.
 - **Assets:** Piskel (art), Bfxr (sound)
 
 ---
-
-## 📁 Project Structure
-
-spread/
-├── src/
-│   └── main.py
-├── assets/
-├── docs/
-├── README.md
-└── .gitignore
