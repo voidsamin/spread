@@ -2,6 +2,7 @@ import sys
 import pygame
 
 import config
+from agents import spawn_agents
 
 
 def draw_fps(surface: pygame.Surface, clock: pygame.time.Clock, font: pygame.font.Font) -> None:
@@ -20,9 +21,8 @@ class Game:
         self.font_title = pygame.font.Font(config.FONT_NAME, config.FONT_SIZE_TITLE)
         self.font_ui = pygame.font.Font(config.FONT_NAME, config.FONT_SIZE_UI)
 
-        # Placeholder title text (will be replaced once we add states/menus)
-        self.title_surf = self.font_title.render("SPREAD", True, config.WHITE)
-        self.title_rect = self.title_surf.get_rect(center=(config.WIDTH // 2, config.HEIGHT // 2))
+        # Spawn agents
+        self.agents = spawn_agents()
 
         self.running = True
 
@@ -35,14 +35,17 @@ class Game:
                     self.running = False
 
     def update(self, dt: float) -> None:
-        # dt is seconds since last frame (for movement later)
-        pass
+        for a in self.agents:
+            a.update(dt)
+            a.bounce_off_walls(config.WIDTH, config.HEIGHT)
+
 
     def draw(self) -> None:
         self.screen.fill(config.BG_COLOR)
 
-        # Temporary splash / placeholder
-        self.screen.blit(self.title_surf, self.title_rect)
+        # Draw agents
+        for a in self.agents:
+            a.draw(self.screen)
 
         if config.SHOW_FPS:
             draw_fps(self.screen, self.clock, self.font_ui)

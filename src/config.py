@@ -43,8 +43,10 @@ FONT_SIZE_TITLE = 48
 FONT_SIZE_UI = 20
 SHOW_FPS = True  # toggle debug fps overlay
 
+
+
 # -----------------------------
-# Simulation parameters (we'll use these in upcoming steps)
+# Simulation parameters (Agents)
 # -----------------------------
 AGENT_COUNT = 150
 AGENT_RADIUS = 6
@@ -53,12 +55,11 @@ AGENT_RADIUS = 6
 AGENT_SPEED_MIN = 40
 AGENT_SPEED_MAX = 140
 
-# Random motion / noise
-# Amount of velocity change (px/s) applied per second (scaled by dt)
-WANDER_STRENGTH = 60
-MAX_SPEED = 170
+# Spawn / overlap
+SPAWN_MAX_ATTEMPTS = 6000
+SPAWN_PADDING = 1  # extra pixels of spacing between circles
 
-# Infection model
+# Infection model (state + colors)
 INITIAL_INFECTED = 3
 INFECTION_PROBABILITY = 0.25  # p in the proposal
 
