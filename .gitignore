@@ -24,6 +24,3 @@ Thumbs.db
 build/
 dist/
 *.egg-info/
-
-# ToDo list
-/ToDo.md
