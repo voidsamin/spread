@@ -43,3 +43,14 @@ allows real-time player intervention to contain outbreaks.
 - **Assets:** Piskel (art), Bfxr (sound)
 
 ---
+
+## How to Run
+
+From the project root directory:
+
+```bash
+python src/main.py
+```
+
+- Make sure you have Python 3.x installed and pygame available
+- See SETUP.md for full setup instructions.
