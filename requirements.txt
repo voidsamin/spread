@@ -1,1 +1,2 @@
-pygame
+python version 3.11.9
+pygame version 2.6.1
