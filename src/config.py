@@ -59,6 +59,15 @@ AGENT_SPEED_MAX = 140
 WANDER_STRENGTH = 60   # px/s^2-ish feel: higher = more jitter
 MAX_SPEED = 170        # hard cap on speed (px/s)
 
+# Agent-agent collisions
+ENABLE_AGENT_COLLISIONS = True
+
+# 0.0 = no bounce response (only separation), 1.0 = perfectly elastic-ish
+COLLISION_RESTITUTION = 1.0
+
+# Small amount of extra separation to prevent re-overlap jitter
+COLLISION_SLOP = 0.2
+
 # Spawn / overlap
 SPAWN_MAX_ATTEMPTS = 6000
 SPAWN_PADDING = 1  # extra pixels of spacing between circles

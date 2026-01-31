@@ -57,9 +57,9 @@ Deliverable: Agents move unpredictably but controllably.
 ---
 
 ## 4) Collisions: agent-agent contact detection (Week 2)
-- [ ] (★) Implement circle-circle collision detection
-- [ ] (★) Resolve overlaps (simple separation) to avoid sticking
-- [ ] (☆) Add elastic collision response (swap velocity components) for nicer physics
+- [x] (★) Implement circle-circle collision detection
+- [x] (★) Resolve overlaps (simple separation) to avoid sticking
+- [x] (☆) Add elastic collision response (swap velocity components) for nicer physics
 - [ ] (☆) Optimization prep: spatial partitioning (uniform grid) if needed
 
 Deliverable: Dots collide and don’t phase through each other.

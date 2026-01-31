@@ -2,7 +2,7 @@ import sys
 import pygame
 
 import config
-from agents import spawn_agents
+from agents import spawn_agents, resolve_agent_collisions
 
 
 def draw_fps(surface: pygame.Surface, clock: pygame.time.Clock, font: pygame.font.Font) -> None:
@@ -39,6 +39,8 @@ class Game:
             a.update(dt)
             a.bounce_off_walls(config.WIDTH, config.HEIGHT)
 
+        if config.ENABLE_AGENT_COLLISIONS:
+            resolve_agent_collisions(self.agents)
 
     def draw(self) -> None:
         self.screen.fill(config.BG_COLOR)

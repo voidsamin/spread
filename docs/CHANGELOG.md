@@ -37,3 +37,17 @@ All notable changes to this project will be documented here.
 ### Fixed / Notes
 - Movement behavior now appears more natural and less deterministic.
 - Global difficulty-based speed scaling is not yet implemented (planned for a later version).
+
+## v0.14 — Agent-agent collisions
+### Added
+- Agent–agent circle collision detection (contact/overlap check using radii).
+- Collision resolution via positional separation to prevent overlap/sticking.
+- Optional elastic collision response (velocity impulse) controlled by `COLLISION_RESTITUTION` in `config.py`.
+
+### Changed
+- Agent update loop now includes a collision-resolution pass each frame (after movement + wall bounce).
+- Collision tuning parameters added to `config.py` (enable toggle + restitution + slop).
+
+### Fixed / Notes
+- Set `COLLISION_RESTITUTION = 1.0` to avoid gradual slow-down after many collisions.
+- Current implementation is O(N²); spatial partitioning (uniform grid) is deferred until higher agent counts are needed.

@@ -109,3 +109,75 @@ def spawn_agents() -> list[Agent]:
         a.infected = True
 
     return agents
+
+def resolve_agent_collisions(agents: list[Agent]) -> None:
+    """
+    Resolves circle-circle overlaps between agents (simple separation),
+    and optionally applies a basic elastic velocity response.
+
+    This is O(N^2) and fine for ~150 agents. If we go much higher,
+    we'll add a uniform grid later.
+    """
+    if len(agents) < 2:
+        return
+
+    restitution = getattr(config, "COLLISION_RESTITUTION", 0.0)
+    slop = getattr(config, "COLLISION_SLOP", 0.0)
+
+    for i in range(len(agents)):
+        a = agents[i]
+        for j in range(i + 1, len(agents)):
+            b = agents[j]
+
+            delta = b.pos - a.pos
+            dist_sq = delta.length_squared()
+
+            min_dist = a.radius + b.radius
+            min_dist_sq = min_dist * min_dist
+
+            # No collision/overlap
+            if dist_sq >= min_dist_sq or dist_sq == 0:
+                # dist_sq == 0: perfectly overlapping (rare). We'll handle below.
+                if dist_sq != 0:
+                    continue
+
+            # Handle zero-distance overlap (same position)
+            if dist_sq == 0:
+                # Nudge in a random-ish direction
+                delta = pygame.Vector2(random.uniform(-1, 1), random.uniform(-1, 1))
+                if delta.length_squared() == 0:
+                    delta = pygame.Vector2(1, 0)
+                delta = delta.normalize()
+                dist = 0.0
+            else:
+                dist = dist_sq ** 0.5
+                delta = delta / dist  # normalized
+
+            # Overlap amount
+            overlap = (min_dist - dist) + slop
+            if overlap <= 0:
+                continue
+
+            # --- 1) Separate positions (push each agent half the overlap)
+            correction = delta * (overlap * 0.5)
+            a.pos -= correction
+            b.pos += correction
+
+            # --- 2) Optional: elastic-ish velocity response
+            # Only if they are moving towards each other along the normal.
+            if restitution > 0:
+                rel_vel = b.vel - a.vel
+                vel_along_normal = rel_vel.dot(delta)
+
+                # If vel_along_normal > 0 they’re separating already -> skip impulse
+                if vel_along_normal < 0:
+                    # Equal mass impulse scalar
+                    j_impulse = -(1 + restitution) * vel_along_normal / 2.0
+                    impulse = delta * j_impulse
+
+                    a.vel -= impulse
+                    b.vel += impulse
+
+                    # Clamp after impulse (keeps system stable)
+                    _clamp_speed(a.vel, config.MAX_SPEED)
+                    _clamp_speed(b.vel, config.MAX_SPEED)
