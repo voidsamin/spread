@@ -51,3 +51,18 @@ All notable changes to this project will be documented here.
 ### Fixed / Notes
 - Set `COLLISION_RESTITUTION = 1.0` to avoid gradual slow-down after many collisions.
 - Current implementation is O(N²); spatial partitioning (uniform grid) is deferred until higher agent counts are needed.
+
+## v0.15 — Initial infection model
+### Added
+- Patient-zero initialization: a random subset of agents start infected (`INITIAL_INFECTED`).
+- Probabilistic infection spread on agent contact/collision using `INFECTION_PROBABILITY`.
+- Per-frame infection statistics tracking: `infected_count`, `healthy_count`, and `infected_ratio`.
+- Threshold timer tracking for the lose condition: accumulates `time_above_threshold` when infected ratio exceeds `LOSE_THRESHOLD_RATIO`.
+
+### Changes
+- Collision handling now also triggers infection checks when agents make contact.
+- Game update loop now computes and stores infection metrics every frame.
+
+### Fixed / Notes
+- Incubation and natural recovery timers are not implemented yet (deferred).
+- Lose condition is only tracked (no win/lose screen yet).

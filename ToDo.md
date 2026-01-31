@@ -67,11 +67,11 @@ Deliverable: Dots collide and don’t phase through each other.
 ---
 
 ## 5) Infection model: patient zero + probabilistic spread (Week 2)
-- [ ] (★) Randomly select initial infected agents (patient zero count)
-- [ ] (★) On collision between infected & healthy, infect with probability `p`
-- [ ] (★) Track stats each frame:
-  - [ ] infected_count, healthy_count, infected_ratio
-  - [ ] time_above_threshold (for lose condition)
+- [x] (★) Randomly select initial infected agents (patient zero count)
+- [x] (★) On collision between infected & healthy, infect with probability `p`
+- [x] (★) Track stats each frame:
+  - [x] infected_count, healthy_count, infected_ratio
+  - [x] time_above_threshold (for lose condition)
 - [ ] (☆) Add incubation timer (infected but not infectious) (optional)
 - [ ] (☆) Add recovery timer (natural recovery) (optional; proposal emphasizes cure via player)
 

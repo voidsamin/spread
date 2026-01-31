@@ -110,6 +110,22 @@ def spawn_agents() -> list[Agent]:
 
     return agents
 
+def try_spread_infection(a: Agent, b: Agent) -> None:
+    """
+    If one agent is infected and the other is not,
+    infect the healthy one with probability INFECTION_PROBABILITY.
+    """
+    p = config.INFECTION_PROBABILITY
+
+    # One infected, one healthy
+    if a.infected and (not b.infected):
+        if random.random() < p:
+            b.infected = True
+    elif b.infected and (not a.infected):
+        if random.random() < p:
+            a.infected = True
+
+
 def resolve_agent_collisions(agents: list[Agent]) -> None:
     """
     Resolves circle-circle overlaps between agents (simple separation),
@@ -157,6 +173,9 @@ def resolve_agent_collisions(agents: list[Agent]) -> None:
             overlap = (min_dist - dist) + slop
             if overlap <= 0:
                 continue
+
+            # Infection spread happens on collision
+            try_spread_infection(a, b)
 
             # --- 1) Separate positions (push each agent half the overlap)
             correction = delta * (overlap * 0.5)

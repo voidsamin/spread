@@ -9,6 +9,19 @@ def draw_fps(surface: pygame.Surface, clock: pygame.time.Clock, font: pygame.fon
     fps_text = font.render(f"FPS: {clock.get_fps():.0f}", True, config.UI_COLOR)
     surface.blit(fps_text, (10, 8))
 
+def draw_stats(surface: pygame.Surface, font: pygame.font.Font, infected: int, healthy: int, ratio: float, t_above: float) -> None:
+    lines = [
+        f"Infected: {infected}",
+        f"Healthy:  {healthy}",
+        f"Infected %: {ratio*100:.1f}%",
+        f">50% timer: {t_above:.1f}s",
+    ]
+    y = 30
+    for line in lines:
+        surf = font.render(line, True, config.UI_COLOR)
+        surface.blit(surf, (10, y))
+        y += 22
+
 
 class Game:
     def __init__(self) -> None:
@@ -23,6 +36,15 @@ class Game:
 
         # Spawn agents
         self.agents = spawn_agents()
+
+        # Infection stats (updated every frame)
+        self.infected_count = 0
+        self.healthy_count = 0
+        self.infected_ratio = 0.0
+
+        # Lose-condition timer tracking (no lose screen yet; just tracking)
+        self.time_above_threshold = 0.0
+
 
         self.running = True
 
@@ -41,6 +63,18 @@ class Game:
 
         if config.ENABLE_AGENT_COLLISIONS:
             resolve_agent_collisions(self.agents)
+        
+        # ---- Stats tracking (every frame) ----
+        self.infected_count = sum(1 for a in self.agents if a.infected)
+        self.healthy_count = len(self.agents) - self.infected_count
+        self.infected_ratio = self.infected_count / max(1, len(self.agents))
+
+        # ---- Threshold timer (for lose condition later) ----
+        if self.infected_ratio > config.LOSE_THRESHOLD_RATIO:
+            self.time_above_threshold += dt
+        else:
+            self.time_above_threshold = 0.0
+
 
     def draw(self) -> None:
         self.screen.fill(config.BG_COLOR)
@@ -51,6 +85,16 @@ class Game:
 
         if config.SHOW_FPS:
             draw_fps(self.screen, self.clock, self.font_ui)
+        
+        draw_stats(
+            self.screen,
+            self.font_ui,
+            self.infected_count,
+            self.healthy_count,
+            self.infected_ratio,
+            self.time_above_threshold,
+        )
+
 
         pygame.display.flip()
 
