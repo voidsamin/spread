@@ -46,11 +46,11 @@ Deliverable: 100+ moving dots bouncing in the window.
 ---
 
 ## 3) Stochastic motion (randomness) (Week 1)
-- [ ] (★) Add random/noisy velocity updates (random-walk / jitter)
-  - [ ] Small noise applied every few frames or based on dt
-  - [ ] Clamp max speed
+- [x] (★) Add random/noisy velocity updates (random-walk / jitter)
+  - [x] Small noise applied every few frames or based on dt
+  - [x] Clamp max speed
 - [ ] (★) Add a global difficulty parameter for speed scaling over time
-- [ ] (☆) Add “wander” behavior (smooth direction change) to reduce twitchiness
+- [x] (☆) Add “wander” behavior (smooth direction change) to reduce twitchiness
 
 Deliverable: Agents move unpredictably but controllably.
 

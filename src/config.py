@@ -4,7 +4,7 @@ Keep *all tunable constants* here so gameplay/simulation parameters
 can be changed without hunting through code.
 
 Rule of thumb:
-- Anything you'd want to tweak (sizes, speeds, probabilities, timers) goes here.
+- Anything that needs tweaks (sizes, speeds, probabilities, timers) goes here.
 - Code logic stays in other modules.
 """
 
@@ -13,7 +13,7 @@ from __future__ import annotations
 # -----------------------------
 # Window / timing
 # -----------------------------
-TITLE = "SPREAD - Simulation Lab"
+TITLE = "SPREAD"
 WIDTH, HEIGHT = 800, 600
 FPS = 60
 
@@ -54,6 +54,10 @@ AGENT_RADIUS = 6
 # Speeds are in pixels per second
 AGENT_SPEED_MIN = 40
 AGENT_SPEED_MAX = 140
+
+# Random motion / wander (stochastic movement)
+WANDER_STRENGTH = 60   # px/s^2-ish feel: higher = more jitter
+MAX_SPEED = 170        # hard cap on speed (px/s)
 
 # Spawn / overlap
 SPAWN_MAX_ATTEMPTS = 6000

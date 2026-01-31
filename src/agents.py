@@ -9,6 +9,11 @@ import pygame
 import config
 
 
+def _clamp_speed(v: pygame.Vector2, max_speed: float) -> pygame.Vector2:
+    if v.length_squared() > max_speed * max_speed:
+        v.scale_to_length(max_speed)
+    return v
+
 @dataclass
 class Agent:
     pos: pygame.Vector2
@@ -17,7 +22,25 @@ class Agent:
     infected: bool = False  # state: healthy(False) / infected(True)
 
     def update(self, dt: float) -> None:
+        # Stochastic "wander": small random acceleration that changes velocity gradually
+        # This makes movement look more human/random without teleporting directions.
+        jitter = pygame.Vector2(
+            random.uniform(-1, 1),
+            random.uniform(-1, 1),
+        )
+
+        if jitter.length_squared() > 0:
+            jitter = jitter.normalize()
+
+        # Apply wander strength scaled by dt
+        self.vel += jitter * config.WANDER_STRENGTH * dt
+
+        # Clamp speed so agents don't accelerate forever
+        _clamp_speed(self.vel, config.MAX_SPEED)
+
+        # Move
         self.pos += self.vel * dt
+
 
     def bounce_off_walls(self, width: int, height: int) -> None:
         # Left / Right
