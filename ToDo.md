@@ -4,7 +4,7 @@ This is the step-by-step build checklist for **SPREAD** (agent-based disease tra
 
 > **Legend:**  
 > - [ ] = not started  
-> - [o] = ongoing
+> - [-] = ongoing
 > - [x] = done  
 > - (★) = must-have for MVP  
 > - (☆) = nice-to-have / polish  
@@ -13,10 +13,10 @@ This is the step-by-step build checklist for **SPREAD** (agent-based disease tra
 
 ## 0) Project hygiene (once)
 - [x] (★) Confirm repo structure is final: `assets/`, `docs/`, `src/`
-- [o] (★) Add `requirements.txt` (at least `pygame`)
+- [x] (★) Add `requirements.txt` (at least `pygame`)
 - [x] (★) Decide constants + config pattern (e.g., `src/config.py`)
 - [x] (★) Add a basic run command to README (`python src/main.py`)
-- [o] (☆) Create a simple `docs/CHANGELOG.md` (optional but helpful)
+- [x] (☆) Create a simple `docs/CHANGELOG.md` (optional but helpful)
 
 ---
 
