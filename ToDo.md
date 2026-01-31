@@ -3,9 +3,9 @@
 This is the step-by-step build checklist for **SPREAD** (agent-based disease transmission arcade sim) as described in the project proposal. fileciteturn0file0
 
 > **Legend:**  
-> - [ ] = not started  
-> - [-] = ongoing
-> - [x] = done  
+> - [ ] Not started task
+> - [x] Done task
+> - ⏳ Ongoing task
 > - (★) = must-have for MVP  
 > - (☆) = nice-to-have / polish  
 
