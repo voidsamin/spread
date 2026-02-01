@@ -82,3 +82,15 @@ All notable changes to this project will be documented here.
 ### Fixed / Notes
 - Simulation now cleanly freezes on WIN or LOSE states (no background updates).
 - Menu state is defined but not yet implemented visually (planned for a later version).
+
+## v0.17 — Codebase refactor (game + UI modules)
+### Added
+- New `src/game.py` module containing the `Game` class (loop, state handling, update/draw pipeline).
+- New `src/ui.py` module for rendering helpers (`draw_fps`, `draw_stats`, `draw_center_message`).
+
+### Changed
+- `src/main.py` simplified into a minimal entrypoint that only starts `Game().run()`.
+- UI drawing logic moved out of the Game loop file to keep orchestration code cleaner and easier to extend.
+
+### Fixed / Notes
+- No gameplay/simulation behavior changes intended; this update is an organizational refactor to support upcoming features (menus, doctor, projectiles, HUD).
