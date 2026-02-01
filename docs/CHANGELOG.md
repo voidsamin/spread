@@ -66,3 +66,19 @@ All notable changes to this project will be documented here.
 ### Fixed / Notes
 - Incubation and natural recovery timers are not implemented yet (deferred).
 - Lose condition is only tracked (no win/lose screen yet).
+
+## v0.16 — Win/Lose conditions and game states
+### Added
+- Formal game state system (`MENU`, `PLAYING`, `PAUSED`, `WIN`, `LOSE`) centralized in `config.py`.
+- Lose condition enforcement: game transitions to LOSE if infected ratio stays above threshold for the configured duration.
+- Win condition enforcement: game transitions to WIN if infected ratio stays below threshold for the configured duration.
+- Pause functionality (`P` key) to toggle between PLAYING and PAUSED states.
+
+### Changed
+- Game update loop now advances simulation **only** in the `PLAYING` state.
+- Infection threshold timers are frozen automatically when the game is paused or finished.
+- Placeholder survival-based win condition removed in favor of ratio-based containment logic.
+
+### Fixed / Notes
+- Simulation now cleanly freezes on WIN or LOSE states (no background updates).
+- Menu state is defined but not yet implemented visually (planned for a later version).
