@@ -94,3 +94,20 @@ All notable changes to this project will be documented here.
 
 ### Fixed / Notes
 - No gameplay/simulation behavior changes intended; this update is an organizational refactor to support upcoming features (menus, doctor, projectiles, HUD).
+
+## v0.18 — Doctor mechanics (cursor-follow + click-to-cure)
+### Added
+- New `src/doctor.py` module implementing the Doctor entity.
+- Doctor cross that follows the mouse cursor and displays a cure-radius ring.
+- Click-to-cure mechanic: left-click cures the nearest infected agent within `CURE_RADIUS`.
+- Cure cooldown system using `CURE_COOLDOWN` to limit cure spam.
+
+### Changed
+- Game loop now updates and draws the Doctor each frame (while `PLAYING`).
+- Event handling updated to support mouse input for curing infected agents.
+- Project structure extended to keep player interaction logic out of the main game/simulation modules.
+
+### Fixed / Notes
+- Gameplay balance is not finalized yet:
+  - Early-game “instant win by curing patient zero” is still possible under current win rules.
+  - Late-game difficulty may be too high when infection rate grows (tuning/fixes pending).
