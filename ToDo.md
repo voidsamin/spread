@@ -49,7 +49,6 @@ Deliverable: 100+ moving dots bouncing in the window.
 - [x] (★) Add random/noisy velocity updates (random-walk / jitter)
   - [x] Small noise applied every few frames or based on dt
   - [x] Clamp max speed
-- [ ] (★) Add a global difficulty parameter for speed scaling over time
 - [x] (☆) Add “wander” behavior (smooth direction change) to reduce twitchiness
 
 Deliverable: Agents move unpredictably but controllably.
@@ -95,11 +94,11 @@ Deliverable: You can “lose” correctly; “win” condition exists.
 ---
 
 ## 7) The Doctor: cursor-follow + click-to-cure (Week 3)
-- [ ] (★) Draw the doctor as a blue cross that follows mouse position
-- [ ] (★) Click-to-cure mechanic:
-  - [ ] On click, find nearest infected within a cure radius
-  - [ ] Set infected → healthy (or recovered)
-  - [ ] Add cooldown to prevent spam (optional)
+- [x] (★) Draw the doctor as a blue cross that follows mouse position
+- [x] (★) Click-to-cure mechanic:
+  - [x] On click, find nearest infected within a cure radius
+  - [x] Set infected → healthy (or recovered)
+  - [x] Add cooldown to prevent spam (optional)
 - [ ] (☆) Add curing effect (pulse ring / particles)
 
 Deliverable: Player can actively reduce infections.
@@ -120,9 +119,9 @@ Deliverable: Ranged curing works and feels responsive.
 
 ## 9) HUD + in-game telemetry (Week 5)
 - [ ] (★) HUD elements:
-  - [ ] Infected %
-  - [ ] Healthy count
-  - [ ] Timer above 50%
+  - [x] Infected %
+  - [x] Healthy count
+  - [x] Timer above 50%
   - [ ] Total elapsed time
   - [ ] Pellet cooldown/ammo
 - [ ] (★) Infection curve overlay (simple):
@@ -156,10 +155,12 @@ Deliverable: Basic audio feedback improves feel.
 ---
 
 ## 12) Difficulty tuning + balance (Week 6)
-- [ ] (★) Tune agent speed curve over time
+- [ ] (★) Implement global difficulty scaling over time (speed multiplier/curve)
+- [ ] (★) Tune difficulty curve parameters (how fast it ramps up)
 - [ ] (★) Tune infection probability `p`
 - [ ] (★) Tune pellet cooldown/ammo
 - [ ] (★) Ensure loss condition is fair (not instant doom)
+- [ ] (★) Prevent instant-win at game start (e.g., win-check warmup)
 - [ ] (☆) Add difficulty levels (Easy/Normal/Hard)
 
 Deliverable: “Containment” is challenging but possible.
