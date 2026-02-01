@@ -83,12 +83,12 @@ Deliverable: Infection spreads stochastically across collisions.
 From proposal:
 - **Lose** if infection rate exceeds **50%** for over **2 minutes**. fileciteturn0file0
 
-- [ ] (★) Implement threshold logic:
-  - [ ] When infected_ratio > 0.5, accumulate `time_above_50`
-  - [ ] If drops back <= 0.5, reset (or decay) timer (choose one)
-- [ ] (★) Define win condition:
-  - [ ] Survive for X total minutes OR cure to below Y% for Z seconds (pick one)
-- [ ] (★) Implement game states: MENU, PLAYING, PAUSED, WIN, LOSE
+- [x] (★) Implement threshold logic:
+  - [x] When infected_ratio > 0.5, accumulate `time_above_50`
+  - [x] If drops back <= 0.5, reset timer or decay timer
+- [x] (★) Define win condition:
+  - [x] Survive for X total minutes OR cure to below Y% for Z seconds (pick one)
+- [x] (★) Implement game states: MENU, PLAYING, PAUSED, WIN, LOSE
 
 Deliverable: You can “lose” correctly; “win” condition exists.
 

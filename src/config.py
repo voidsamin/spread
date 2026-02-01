@@ -18,7 +18,8 @@ WIDTH, HEIGHT = 800, 600
 FPS = 60
 
 # Fixed timestep is optional; for now we use dt from clock.tick()
-# If later you want deterministic physics, add FIXED_DT = 1/60.
+# If later we want deterministic physics, add FIXED_DT = 1/60.
+
 
 # -----------------------------
 # Colors (RGB)
@@ -35,6 +36,7 @@ RECOVERED_COLOR = (80, 160, 230)
 DOCTOR_COLOR = (80, 160, 230)
 UI_COLOR = (235, 235, 235)
 
+
 # -----------------------------
 # UI / fonts
 # -----------------------------
@@ -42,6 +44,16 @@ FONT_NAME = None  # None = default pygame font
 FONT_SIZE_TITLE = 48
 FONT_SIZE_UI = 20
 SHOW_FPS = True  # toggle debug fps overlay
+
+
+# -----------------------------
+# Game states
+# -----------------------------
+MENU = "MENU"
+PLAYING = "PLAYING"
+PAUSED = "PAUSED"
+WIN = "WIN"
+LOSE = "LOSE"
 
 
 
@@ -80,8 +92,9 @@ INFECTION_PROBABILITY = 0.25  # p in the proposal
 LOSE_THRESHOLD_RATIO = 0.50
 LOSE_THRESHOLD_SECONDS = 120.0
 
-# Win condition (placeholder; we'll define properly later)
-WIN_SURVIVE_SECONDS = 180.0  # survive 3 minutes
+# Win condition
+WIN_THRESHOLD_RATIO = 0.10      # win if infected ratio stays below 10%
+WIN_THRESHOLD_SECONDS = 30.0    # for this many seconds
 
 # Doctor mechanics (placeholder; later)
 CURE_RADIUS = 24
