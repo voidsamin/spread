@@ -5,6 +5,7 @@ import pygame
 
 import config
 from agents import spawn_agents, resolve_agent_collisions
+from doctor import Doctor
 from ui import draw_fps, draw_stats, draw_center_message
 
 
@@ -21,6 +22,10 @@ class Game:
 
         # Spawn agents
         self.agents = spawn_agents()
+
+        # Doctor (player)
+        self.doctor = Doctor()
+
 
         # Infection stats (updated every frame)
         self.infected_count = 0
@@ -53,11 +58,21 @@ class Game:
                     elif self.state == config.PAUSED:
                         self.state = config.PLAYING
 
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Left click to cure
+                if event.button == 1 and self.state == config.PLAYING:
+                    self.doctor.try_cure(self.agents)
+
+
     def update(self, dt: float) -> None:
         # Only simulate while playing (future-proof for MENU etc.)
         if self.state != config.PLAYING:
             return
+        
+        # Update doctor
+        self.doctor.update(dt)
 
+        # Update agents
         for a in self.agents:
             a.update(dt)
             a.bounce_off_walls(config.WIDTH, config.HEIGHT)
@@ -94,6 +109,9 @@ class Game:
         # Draw agents
         for a in self.agents:
             a.draw(self.screen)
+        
+        # Draw doctor on top
+        self.doctor.draw(self.screen)
 
         if config.SHOW_FPS:
             draw_fps(self.screen, self.clock, self.font_ui)
