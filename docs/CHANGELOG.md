@@ -127,3 +127,16 @@ All notable changes to this project will be documented here.
   - Shooting direction can fail when the doctor is exactly on the cursor (zero-length aim vector).
   - Pellets currently spawn at the cursor/doctor position, making feedback feel unclear.
   - Ranged curing feels underpowered with current agent density and hitbox size; tuning/polish planned (ammo, pellet radius, pierce/AoE).
+
+## v0.20 — Projectile aiming correctness fixes
+### Added
+- Persistent aim-direction tracking for the Doctor to allow shooting even when the mouse is stationary.
+
+### Changed
+- Vaccine pellets now spawn slightly in front of the Doctor (muzzle offset) instead of directly at the cursor position.
+- Projectile direction selection now falls back to the last valid aim direction when the cursor does not move.
+
+### Fixed / Notes
+- Fixed an issue where right-click shooting failed if the mouse was not moving.
+- Improved clarity and usability of ranged curing without changing balance parameters.
+- **Known issue:** When the Doctor is exactly on the cursor, projectile aiming may collapse to a limited set of discrete directions (axis-aligned or diagonal). This is a correctness issue related to input geometry and is planned to be fixed later (e.g., via smoothed doctor follow or alternative aiming logic).
