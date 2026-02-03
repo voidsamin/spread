@@ -111,3 +111,19 @@ All notable changes to this project will be documented here.
 - Gameplay balance is not finalized yet:
   - Early-game “instant win by curing patient zero” is still possible under current win rules.
   - Late-game difficulty may be too high when infection rate grows (tuning/fixes pending).
+
+## v0.19 — Vaccine pellets (projectiles) baseline implementation
+### Added
+- New projectile system for ranged curing (vaccine pellets).
+- Right-click firing mechanic integrated with Doctor controls.
+- Projectile lifecycle handling (speed, radius, lifetime/despawn) and on-hit curing for infected agents.
+
+### Changed
+- Game update loop now updates and renders active projectiles each frame.
+- Input handling extended to include right-click shooting alongside left-click curing.
+
+### Fixed / Notes
+- Known issues / polish pending:
+  - Shooting direction can fail when the doctor is exactly on the cursor (zero-length aim vector).
+  - Pellets currently spawn at the cursor/doctor position, making feedback feel unclear.
+  - Ranged curing feels underpowered with current agent density and hitbox size; tuning/polish planned (ammo, pellet radius, pierce/AoE).
