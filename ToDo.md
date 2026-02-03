@@ -106,11 +106,11 @@ Deliverable: Player can actively reduce infections.
 ---
 
 ## 8) Vaccine pellets: ranged curing (Week 4)
-- [ ] (★) Implement projectile class:
-  - [ ] Spawn from doctor toward mouse direction on right click / key
-  - [ ] Projectile speed, lifetime, radius
-- [ ] (★) Projectile hits infected agent → cures it
-- [ ] (★) Ammo / cooldown balancing
+- [x] (★) Implement projectile class:
+  - [x] Spawn from doctor toward mouse direction on right click / key
+  - [x] Projectile speed, lifetime, radius
+- [x] (★) Projectile hits infected agent → cures it
+- [x] (★) Ammo / cooldown balancing
 - [ ] (☆) Add ricochet or piercing shots (advanced/polish)
 
 Deliverable: Ranged curing works and feels responsive.

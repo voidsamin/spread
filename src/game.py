@@ -6,6 +6,7 @@ import pygame
 import config
 from agents import spawn_agents, resolve_agent_collisions
 from doctor import Doctor
+from projectiles import Projectile
 from ui import draw_fps, draw_stats, draw_center_message
 
 
@@ -25,6 +26,9 @@ class Game:
 
         # Doctor (player)
         self.doctor = Doctor()
+
+        # Projectiles (vaccine pellets)
+        self.projectiles: list[Projectile] = []
 
 
         # Infection stats (updated every frame)
@@ -59,9 +63,17 @@ class Game:
                         self.state = config.PLAYING
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                # Left click to cure
-                if event.button == 1 and self.state == config.PLAYING:
-                    self.doctor.try_cure(self.agents)
+                if self.state == config.PLAYING:
+                    # Left click: cure
+                    if event.button == 1:
+                        self.doctor.try_cure(self.agents)
+
+                    # Right click: shoot pellet
+                    elif event.button == 3:
+                        proj = self.doctor.try_shoot()
+                        if proj is not None:
+                            self.projectiles.append(proj)
+
 
 
     def update(self, dt: float) -> None:
@@ -79,6 +91,29 @@ class Game:
 
         if config.ENABLE_AGENT_COLLISIONS:
             resolve_agent_collisions(self.agents)
+        
+        # ---- Projectiles update + hit detection ----
+        for p in self.projectiles:
+            p.update(dt)
+
+        # Check hits (projectile vs infected agents)
+        # If a projectile hits an infected agent, cure it and remove projectile.
+        survivors: list[Projectile] = []
+        for p in self.projectiles:
+            hit = False
+            for a in self.agents:
+                if not a.infected:
+                    continue
+                # circle-circle collision: agent radius + projectile radius
+                if (a.pos - p.pos).length_squared() <= (a.radius + p.radius) ** 2:
+                    a.infected = False
+                    hit = True
+                    break
+            if (not hit) and (not p.is_dead()):
+                survivors.append(p)
+
+        self.projectiles = survivors
+
 
         # ---- Stats tracking (every frame) ----
         self.infected_count = sum(1 for a in self.agents if a.infected)
@@ -109,6 +144,10 @@ class Game:
         # Draw agents
         for a in self.agents:
             a.draw(self.screen)
+        
+        # Draw projectiles
+        for p in self.projectiles:
+            p.draw(self.screen)
         
         # Draw doctor on top
         self.doctor.draw(self.screen)

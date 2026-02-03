@@ -3,6 +3,7 @@ from __future__ import annotations
 import pygame
 import config
 from agents import Agent
+from projectiles import Projectile
 
 
 class Doctor:
@@ -13,6 +14,12 @@ class Doctor:
         self.pos = pygame.Vector2(config.WIDTH // 2, config.HEIGHT // 2)
         self.cooldown_timer = 0.0  # seconds until next cure allowed
 
+        # Projectile (pellet) shooting
+        self.shot_cooldown_timer = 0.0
+        self.ammo = config.PELLET_AMMO_MAX
+        self.reload_timer = 0.0
+
+
     def update(self, dt: float) -> None:
         # Follow mouse cursor
         mx, my = pygame.mouse.get_pos()
@@ -21,6 +28,20 @@ class Doctor:
         # Cooldown countdown
         if self.cooldown_timer > 0:
             self.cooldown_timer = max(0.0, self.cooldown_timer - dt)
+
+        # Shot cooldown countdown
+        if self.shot_cooldown_timer > 0:
+            self.shot_cooldown_timer = max(0.0, self.shot_cooldown_timer - dt)
+
+        # Simple reload: when ammo is empty, wait RELOAD_TIME then refill
+        if self.ammo <= 0:
+            self.reload_timer += dt
+            if self.reload_timer >= config.PELLET_RELOAD_TIME:
+                self.ammo = config.PELLET_AMMO_MAX
+                self.reload_timer = 0.0
+        else:
+            self.reload_timer = 0.0
+
 
     def can_cure(self) -> bool:
         return self.cooldown_timer <= 0.0
@@ -56,6 +77,40 @@ class Doctor:
         # Start cooldown
         self.cooldown_timer = config.CURE_COOLDOWN
         return True
+
+    def try_shoot(self) -> Projectile | None:
+        """
+        Fire a projectile from the doctor toward the mouse cursor.
+        Right click (handled by game) should call this.
+        Returns Projectile if shot fired, else None.
+        """
+        if self.shot_cooldown_timer > 0:
+            return None
+        if self.ammo <= 0:
+            return None
+
+        mx, my = pygame.mouse.get_pos()
+        target = pygame.Vector2(mx, my)
+        direction = target - self.pos
+
+        if direction.length_squared() == 0:
+            return None
+
+        direction = direction.normalize()
+
+        vel = direction * config.PELLET_SPEED
+
+        proj = Projectile(
+            pos=self.pos.copy(),
+            vel=vel,
+            radius=config.PELLET_RADIUS,
+            life=config.PELLET_LIFETIME,
+        )
+
+        self.ammo -= 1
+        self.shot_cooldown_timer = config.PELLET_COOLDOWN
+        return proj
+
 
     def draw(self, surface: pygame.Surface) -> None:
         """

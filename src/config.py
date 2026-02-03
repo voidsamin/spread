@@ -99,3 +99,15 @@ WIN_THRESHOLD_SECONDS = 30.0    # for this many seconds
 # Doctor mechanics (placeholder; later)
 CURE_RADIUS = 24
 CURE_COOLDOWN = 0.15  # seconds between cures
+
+
+# -----------------------------
+# Vaccine pellets (projectiles)
+# -----------------------------
+PELLET_SPEED = 520          # px/s
+PELLET_RADIUS = 4           # pixels
+PELLET_LIFETIME = 1.2       # seconds before despawn
+
+PELLET_COOLDOWN = 0.15      # seconds between shots
+PELLET_AMMO_MAX = 12        # max ammo
+PELLET_RELOAD_TIME = 2.5    # seconds to reload back to full (simple reload)
