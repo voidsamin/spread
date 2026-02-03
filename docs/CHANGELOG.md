@@ -1,10 +1,122 @@
 # Changelog
 All notable changes to this project will be documented here.
 
-## v0.1 – Initial Setup + Foundation
-- Project structure created
-- Pygame window + game loop
-- Config system added
+## v0.20 — Projectile aiming correctness fixes
+### Added
+- Persistent aim-direction tracking for the Doctor to allow shooting even when the mouse is stationary.
+
+### Changed
+- Vaccine pellets now spawn slightly in front of the Doctor (muzzle offset) instead of directly at the cursor position.
+- Projectile direction selection now falls back to the last valid aim direction when the cursor does not move.
+
+### Fixed / Notes
+- Fixed an issue where right-click shooting failed if the mouse was not moving.
+- Improved clarity and usability of ranged curing without changing balance parameters.
+- **Known issue:** When the Doctor is exactly on the cursor, projectile aiming may collapse to a limited set of discrete directions (axis-aligned or diagonal). This is a correctness issue related to input geometry and is planned to be fixed later (e.g., via smoothed doctor follow or alternative aiming logic).
+
+## v0.19 — Vaccine pellets (projectiles) baseline implementation
+### Added
+- New projectile system for ranged curing (vaccine pellets).
+- Right-click firing mechanic integrated with Doctor controls.
+- Projectile lifecycle handling (speed, radius, lifetime/despawn) and on-hit curing for infected agents.
+
+### Changed
+- Game update loop now updates and renders active projectiles each frame.
+- Input handling extended to include right-click shooting alongside left-click curing.
+
+### Fixed / Notes
+- Known issues / polish pending:
+  - Shooting direction can fail when the doctor is exactly on the cursor (zero-length aim vector).
+  - Pellets currently spawn at the cursor/doctor position, making feedback feel unclear.
+  - Ranged curing feels underpowered with current agent density and hitbox size; tuning/polish planned (ammo, pellet radius, pierce/AoE).
+
+## v0.18 — Doctor mechanics (cursor-follow + click-to-cure)
+### Added
+- New `src/doctor.py` module implementing the Doctor entity.
+- Doctor cross that follows the mouse cursor and displays a cure-radius ring.
+- Click-to-cure mechanic: left-click cures the nearest infected agent within `CURE_RADIUS`.
+- Cure cooldown system using `CURE_COOLDOWN` to limit cure spam.
+
+### Changed
+- Game loop now updates and draws the Doctor each frame (while `PLAYING`).
+- Event handling updated to support mouse input for curing infected agents.
+- Project structure extended to keep player interaction logic out of the main game/simulation modules.
+
+### Fixed / Notes
+- Gameplay balance is not finalized yet:
+  - Early-game “instant win by curing patient zero” is still possible under current win rules.
+  - Late-game difficulty may be too high when infection rate grows (tuning/fixes pending).
+
+## v0.17 — Codebase refactor (game + UI modules)
+### Added
+- New `src/game.py` module containing the `Game` class (loop, state handling, update/draw pipeline).
+- New `src/ui.py` module for rendering helpers (`draw_fps`, `draw_stats`, `draw_center_message`).
+
+### Changed
+- `src/main.py` simplified into a minimal entrypoint that only starts `Game().run()`.
+- UI drawing logic moved out of the Game loop file to keep orchestration code cleaner and easier to extend.
+
+### Fixed / Notes
+- No gameplay/simulation behavior changes intended; this update is an organizational refactor to support upcoming features (menus, doctor, projectiles, HUD).
+
+## v0.16 — Win/Lose conditions and game states
+### Added
+- Formal game state system (`MENU`, `PLAYING`, `PAUSED`, `WIN`, `LOSE`) centralized in `config.py`.
+- Lose condition enforcement: game transitions to LOSE if infected ratio stays above threshold for the configured duration.
+- Win condition enforcement: game transitions to WIN if infected ratio stays below threshold for the configured duration.
+- Pause functionality (`P` key) to toggle between PLAYING and PAUSED states.
+
+### Changed
+- Game update loop now advances simulation **only** in the `PLAYING` state.
+- Infection threshold timers are frozen automatically when the game is paused or finished.
+- Placeholder survival-based win condition removed in favor of ratio-based containment logic.
+
+### Fixed / Notes
+- Simulation now cleanly freezes on WIN or LOSE states (no background updates).
+- Menu state is defined but not yet implemented visually (planned for a later version).
+
+## v0.15 — Initial infection model
+### Added
+- Patient-zero initialization: a random subset of agents start infected (`INITIAL_INFECTED`).
+- Probabilistic infection spread on agent contact/collision using `INFECTION_PROBABILITY`.
+- Per-frame infection statistics tracking: `infected_count`, `healthy_count`, and `infected_ratio`.
+- Threshold timer tracking for the lose condition: accumulates `time_above_threshold` when infected ratio exceeds `LOSE_THRESHOLD_RATIO`.
+
+### Changes
+- Collision handling now also triggers infection checks when agents make contact.
+- Game update loop now computes and stores infection metrics every frame.
+
+### Fixed / Notes
+- Incubation and natural recovery timers are not implemented yet (deferred).
+- Lose condition is only tracked (no win/lose screen yet).
+
+## v0.14 — Agent-agent collisions
+### Added
+- Agent–agent circle collision detection (contact/overlap check using radii).
+- Collision resolution via positional separation to prevent overlap/sticking.
+- Optional elastic collision response (velocity impulse) controlled by `COLLISION_RESTITUTION` in `config.py`.
+
+### Changed
+- Agent update loop now includes a collision-resolution pass each frame (after movement + wall bounce).
+- Collision tuning parameters added to `config.py` (enable toggle + restitution + slop).
+
+### Fixed / Notes
+- Set `COLLISION_RESTITUTION = 1.0` to avoid gradual slow-down after many collisions.
+- Current implementation is O(N²); spatial partitioning (uniform grid) is deferred until higher agent counts are needed.
+
+## v0.13 — Stochastic agent motion
+### Added
+- Stochastic “wander” motion for agents using small random velocity perturbations.
+- Velocity clamping to enforce a maximum agent speed and prevent runaway acceleration.
+- Configurable randomness parameters (`WANDER_STRENGTH`, `MAX_SPEED`) centralized in `config.py`.
+
+### Changed
+- Agent movement updated from straight-line motion to smooth, continuously varying trajectories.
+- Agent update logic refactored to incorporate dt-scaled random acceleration for frame-rate–independent behavior.
+
+### Fixed / Notes
+- Movement behavior now appears more natural and less deterministic.
+- Global difficulty-based speed scaling is not yet implemented (planned for a later version).
 
 ## v0.12 — Foundation + Agents module
 ### Added
@@ -24,119 +136,7 @@ All notable changes to this project will be documented here.
 ### Fixed / Notes
 - Repo hygiene: documentation updated to reflect new structure and run instructions.
 
-## v0.13 — Stochastic agent motion
-### Added
-- Stochastic “wander” motion for agents using small random velocity perturbations.
-- Velocity clamping to enforce a maximum agent speed and prevent runaway acceleration.
-- Configurable randomness parameters (`WANDER_STRENGTH`, `MAX_SPEED`) centralized in `config.py`.
-
-### Changed
-- Agent movement updated from straight-line motion to smooth, continuously varying trajectories.
-- Agent update logic refactored to incorporate dt-scaled random acceleration for frame-rate–independent behavior.
-
-### Fixed / Notes
-- Movement behavior now appears more natural and less deterministic.
-- Global difficulty-based speed scaling is not yet implemented (planned for a later version).
-
-## v0.14 — Agent-agent collisions
-### Added
-- Agent–agent circle collision detection (contact/overlap check using radii).
-- Collision resolution via positional separation to prevent overlap/sticking.
-- Optional elastic collision response (velocity impulse) controlled by `COLLISION_RESTITUTION` in `config.py`.
-
-### Changed
-- Agent update loop now includes a collision-resolution pass each frame (after movement + wall bounce).
-- Collision tuning parameters added to `config.py` (enable toggle + restitution + slop).
-
-### Fixed / Notes
-- Set `COLLISION_RESTITUTION = 1.0` to avoid gradual slow-down after many collisions.
-- Current implementation is O(N²); spatial partitioning (uniform grid) is deferred until higher agent counts are needed.
-
-## v0.15 — Initial infection model
-### Added
-- Patient-zero initialization: a random subset of agents start infected (`INITIAL_INFECTED`).
-- Probabilistic infection spread on agent contact/collision using `INFECTION_PROBABILITY`.
-- Per-frame infection statistics tracking: `infected_count`, `healthy_count`, and `infected_ratio`.
-- Threshold timer tracking for the lose condition: accumulates `time_above_threshold` when infected ratio exceeds `LOSE_THRESHOLD_RATIO`.
-
-### Changes
-- Collision handling now also triggers infection checks when agents make contact.
-- Game update loop now computes and stores infection metrics every frame.
-
-### Fixed / Notes
-- Incubation and natural recovery timers are not implemented yet (deferred).
-- Lose condition is only tracked (no win/lose screen yet).
-
-## v0.16 — Win/Lose conditions and game states
-### Added
-- Formal game state system (`MENU`, `PLAYING`, `PAUSED`, `WIN`, `LOSE`) centralized in `config.py`.
-- Lose condition enforcement: game transitions to LOSE if infected ratio stays above threshold for the configured duration.
-- Win condition enforcement: game transitions to WIN if infected ratio stays below threshold for the configured duration.
-- Pause functionality (`P` key) to toggle between PLAYING and PAUSED states.
-
-### Changed
-- Game update loop now advances simulation **only** in the `PLAYING` state.
-- Infection threshold timers are frozen automatically when the game is paused or finished.
-- Placeholder survival-based win condition removed in favor of ratio-based containment logic.
-
-### Fixed / Notes
-- Simulation now cleanly freezes on WIN or LOSE states (no background updates).
-- Menu state is defined but not yet implemented visually (planned for a later version).
-
-## v0.17 — Codebase refactor (game + UI modules)
-### Added
-- New `src/game.py` module containing the `Game` class (loop, state handling, update/draw pipeline).
-- New `src/ui.py` module for rendering helpers (`draw_fps`, `draw_stats`, `draw_center_message`).
-
-### Changed
-- `src/main.py` simplified into a minimal entrypoint that only starts `Game().run()`.
-- UI drawing logic moved out of the Game loop file to keep orchestration code cleaner and easier to extend.
-
-### Fixed / Notes
-- No gameplay/simulation behavior changes intended; this update is an organizational refactor to support upcoming features (menus, doctor, projectiles, HUD).
-
-## v0.18 — Doctor mechanics (cursor-follow + click-to-cure)
-### Added
-- New `src/doctor.py` module implementing the Doctor entity.
-- Doctor cross that follows the mouse cursor and displays a cure-radius ring.
-- Click-to-cure mechanic: left-click cures the nearest infected agent within `CURE_RADIUS`.
-- Cure cooldown system using `CURE_COOLDOWN` to limit cure spam.
-
-### Changed
-- Game loop now updates and draws the Doctor each frame (while `PLAYING`).
-- Event handling updated to support mouse input for curing infected agents.
-- Project structure extended to keep player interaction logic out of the main game/simulation modules.
-
-### Fixed / Notes
-- Gameplay balance is not finalized yet:
-  - Early-game “instant win by curing patient zero” is still possible under current win rules.
-  - Late-game difficulty may be too high when infection rate grows (tuning/fixes pending).
-
-## v0.19 — Vaccine pellets (projectiles) baseline implementation
-### Added
-- New projectile system for ranged curing (vaccine pellets).
-- Right-click firing mechanic integrated with Doctor controls.
-- Projectile lifecycle handling (speed, radius, lifetime/despawn) and on-hit curing for infected agents.
-
-### Changed
-- Game update loop now updates and renders active projectiles each frame.
-- Input handling extended to include right-click shooting alongside left-click curing.
-
-### Fixed / Notes
-- Known issues / polish pending:
-  - Shooting direction can fail when the doctor is exactly on the cursor (zero-length aim vector).
-  - Pellets currently spawn at the cursor/doctor position, making feedback feel unclear.
-  - Ranged curing feels underpowered with current agent density and hitbox size; tuning/polish planned (ammo, pellet radius, pierce/AoE).
-
-## v0.20 — Projectile aiming correctness fixes
-### Added
-- Persistent aim-direction tracking for the Doctor to allow shooting even when the mouse is stationary.
-
-### Changed
-- Vaccine pellets now spawn slightly in front of the Doctor (muzzle offset) instead of directly at the cursor position.
-- Projectile direction selection now falls back to the last valid aim direction when the cursor does not move.
-
-### Fixed / Notes
-- Fixed an issue where right-click shooting failed if the mouse was not moving.
-- Improved clarity and usability of ranged curing without changing balance parameters.
-- **Known issue:** When the Doctor is exactly on the cursor, projectile aiming may collapse to a limited set of discrete directions (axis-aligned or diagonal). This is a correctness issue related to input geometry and is planned to be fixed later (e.g., via smoothed doctor follow or alternative aiming logic).
+## v0.1 – Initial Setup + Foundation
+- Project structure created
+- Pygame window + game loop
+- Config system added
