@@ -61,6 +61,10 @@ class Game:
                         self.state = config.PAUSED
                     elif self.state == config.PAUSED:
                         self.state = config.PLAYING
+            
+            elif event.type == pygame.MOUSEMOTION:
+                dx, dy = event.rel
+                self.doctor.update_aim(dx, dy)
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if self.state == config.PLAYING:

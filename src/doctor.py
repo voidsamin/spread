@@ -19,6 +19,8 @@ class Doctor:
         self.ammo = config.PELLET_AMMO_MAX
         self.reload_timer = 0.0
 
+        # Aim direction fallback (when mouse isn't moving)
+        self.aim_dir = pygame.Vector2(1, 0)
 
     def update(self, dt: float) -> None:
         # Follow mouse cursor
@@ -77,6 +79,13 @@ class Doctor:
         # Start cooldown
         self.cooldown_timer = config.CURE_COOLDOWN
         return True
+    
+
+    def update_aim(self, dx: int, dy: int) -> None:
+        v = pygame.Vector2(dx, dy)
+        if v.length_squared() > 0:
+            self.aim_dir = v.normalize()
+
 
     def try_shoot(self) -> Projectile | None:
         """
@@ -93,15 +102,20 @@ class Doctor:
         target = pygame.Vector2(mx, my)
         direction = target - self.pos
 
-        if direction.length_squared() == 0:
-            return None
-
-        direction = direction.normalize()
+        # If mouse hasn't moved (doctor is on cursor), use last aim direction
+        if direction.length_squared() > 0:
+            direction = direction.normalize()
+        else:
+            direction = self.aim_dir
 
         vel = direction * config.PELLET_SPEED
 
+        # Spawn slightly in front of the doctor (muzzle offset)
+        muzzle_offset = 14  # pixels
+        spawn_pos = self.pos + direction * muzzle_offset
+
         proj = Projectile(
-            pos=self.pos.copy(),
+            pos=spawn_pos,
             vel=vel,
             radius=config.PELLET_RADIUS,
             life=config.PELLET_LIFETIME,
