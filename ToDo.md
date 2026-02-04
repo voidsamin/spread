@@ -111,7 +111,7 @@ Deliverable: Player can actively reduce infections.
   - [x] Projectile speed, lifetime, radius
 - [x] (★) Projectile hits infected agent → cures it
 - [x] (★) Ammo / cooldown balancing
-- [ ] (☆) Improve projectile aiming geometry (continuous angles when doctor overlaps cursor)
+- [x] (☆) Improve projectile aiming geometry (continuous angles when doctor overlaps cursor)
 - [ ] (☆) Add ricochet or piercing shots (advanced/polish)
 
 Deliverable: Ranged curing works and feels responsive.

@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.21 — Continuous projectile aiming bugfix
+### Added
+- Smoothed Doctor cursor-follow behavior to ensure a non-zero aiming vector during shooting.
+
+### Changed
+- Projectile aim direction is now derived from the continuous vector between the Doctor and the cursor rather than discrete mouse movement deltas.
+- Doctor aim direction is updated internally each frame, removing dependence on `MOUSEMOTION` event deltas.
+
+### Fixed / Notes
+- Fixed an issue where projectile aiming collapsed into a limited set of discrete directions (axis-aligned or diagonal) when the Doctor overlapped the cursor.
+- Ranged curing now supports full 360° aiming as intended.
+
 ## v0.20 — Projectile aiming correctness fixes
 ### Added
 - Persistent aim-direction tracking for the Doctor to allow shooting even when the mouse is stationary.
