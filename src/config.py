@@ -100,6 +100,9 @@ WIN_THRESHOLD_SECONDS = 30.0    # for this many seconds
 CURE_RADIUS = 24
 CURE_COOLDOWN = 0.15  # seconds between cures
 
+# Doctor follow smoothing (fixes projectile aim quantization)
+DOCTOR_FOLLOW_SPEED = 25.0  # higher = follows cursor more tightly (try 20–45)
+
 
 # -----------------------------
 # Vaccine pellets (projectiles)

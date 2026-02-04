@@ -12,6 +12,7 @@ class Doctor:
     """
     def __init__(self) -> None:
         self.pos = pygame.Vector2(config.WIDTH // 2, config.HEIGHT // 2)
+        self.target_pos = self.pos.copy() # for smooth following
         self.cooldown_timer = 0.0  # seconds until next cure allowed
 
         # Projectile (pellet) shooting
@@ -23,9 +24,19 @@ class Doctor:
         self.aim_dir = pygame.Vector2(1, 0)
 
     def update(self, dt: float) -> None:
-        # Follow mouse cursor
+        # Follow mouse position with smoothing
         mx, my = pygame.mouse.get_pos()
-        self.pos.update(mx, my)
+        self.target_pos.update(mx, my)
+
+        # Smooth follow so (mouse - doctor) is not zero -> enables true aiming at all angles
+        alpha = min(1.0, config.DOCTOR_FOLLOW_SPEED * dt)
+        self.pos += (self.target_pos - self.pos) * alpha
+
+        # Update aim direction continuously from doctor -> cursor vector (not mouse rel)
+        aim_vec = self.target_pos - self.pos
+        if aim_vec.length_squared() > 1e-6:
+            self.aim_dir = aim_vec.normalize()
+
 
         # Cooldown countdown
         if self.cooldown_timer > 0:
@@ -102,8 +113,8 @@ class Doctor:
         target = pygame.Vector2(mx, my)
         direction = target - self.pos
 
-        # If mouse hasn't moved (doctor is on cursor), use last aim direction
-        if direction.length_squared() > 0:
+        # Use a tiny epsilon to avoid near-zero vectors causing quantized fallback aiming
+        if direction.length_squared() > 1e-6:
             direction = direction.normalize()
         else:
             direction = self.aim_dir
