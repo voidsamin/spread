@@ -1,6 +1,22 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.22 — HUD and infection telemetry
+### Added
+- Basic in-game HUD displaying simulation state (infected count, healthy count, infected percentage).
+- Total elapsed time display.
+- Pellet status indicators (ammo count, reload timer, shot cooldown).
+- Infection ratio history tracking with a simple line-graph overlay.
+- HUD/debug visibility toggle (F1).
+
+### Changed
+- Game loop now records and samples infection statistics over time for visualization purposes.
+- UI responsibilities expanded to include telemetry rendering alongside existing overlays.
+
+### Fixed / Notes
+- HUD is functional and accurate but intentionally minimal in layout and styling.
+- Visual polish, layout refinement, and UI grouping are deferred to later UX/menu work.
+
 ## v0.21 — Continuous projectile aiming bugfix
 ### Added
 - Smoothed Doctor cursor-follow behavior to ensure a non-zero aiming vector during shooting.

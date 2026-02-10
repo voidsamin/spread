@@ -119,16 +119,17 @@ Deliverable: Ranged curing works and feels responsive.
 ---
 
 ## 9) HUD + in-game telemetry (Week 5)
-- [ ] (★) HUD elements:
+- [x] (★) HUD elements:
   - [x] Infected %
   - [x] Healthy count
   - [x] Timer above 50%
-  - [ ] Total elapsed time
-  - [ ] Pellet cooldown/ammo
-- [ ] (★) Infection curve overlay (simple):
-  - [ ] Keep a time series buffer (e.g., last 120s)
-  - [ ] Draw as a line graph in a corner
-- [ ] (☆) Toggle debug UI (F1)
+  - [x] Total elapsed time
+  - [x] Pellet cooldown/ammo
+- [x] (★) Infection curve overlay (simple):
+  - [x] Keep a time series buffer (e.g., last 120s)
+  - [x] Draw as a line graph in a corner
+- [x] (☆) Toggle debug UI (F1)
+- [ ] (☆) Polish HUD layout and visual grouping
 
 Deliverable: The player understands the system state at all times.
 
@@ -162,6 +163,7 @@ Deliverable: Basic audio feedback improves feel.
 - [ ] (★) Tune pellet cooldown/ammo
 - [ ] (★) Ensure loss condition is fair (not instant doom)
 - [ ] (★) Prevent instant-win at game start (e.g., win-check warmup)
+- [ ] (☆) Add infection re-seeding when infected count reaches zero (difficulty-dependent)
 - [ ] (☆) Add difficulty levels (Easy/Normal/Hard)
 
 Deliverable: “Containment” is challenging but possible.
