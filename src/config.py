@@ -114,3 +114,18 @@ PELLET_LIFETIME = 1.2       # seconds before despawn
 PELLET_COOLDOWN = 0.15      # seconds between shots
 PELLET_AMMO_MAX = 12        # max ammo
 PELLET_RELOAD_TIME = 2.5    # seconds to reload back to full (simple reload)
+
+
+
+# -----------------------------
+# HUD / telemetry
+# -----------------------------
+SHOW_HUD = True              # initial HUD visibility
+HUD_TOGGLE_KEY = "F1"        # doc note only; actual key handled in game.py
+
+# Infection curve overlay (last N seconds)
+HISTORY_SECONDS = 120.0      # how many seconds of history to keep
+HISTORY_SAMPLE_DT = 0.25     # sample infected_ratio every 0.25s
+
+# Graph placement (x, y, width, height)
+GRAPH_RECT = (540, 10, 250, 90)

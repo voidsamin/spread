@@ -1,4 +1,6 @@
 from __future__ import annotations
+from collections import deque
+
 
 import sys
 import pygame
@@ -7,7 +9,7 @@ import config
 from agents import spawn_agents, resolve_agent_collisions
 from doctor import Doctor
 from projectiles import Projectile
-from ui import draw_fps, draw_stats, draw_center_message
+from ui import draw_fps, draw_hud, draw_infection_curve, draw_center_message
 
 
 class Game:
@@ -45,6 +47,17 @@ class Game:
         # Win-condition timer
         self.time_below_win_threshold = 0.0
 
+        # HUD toggle
+        self.show_hud = config.SHOW_HUD
+
+        # Elapsed time
+        self.elapsed_time = 0.0
+
+        # Infection ratio history (for curve overlay)
+        self.history_timer = 0.0
+        maxlen = int(config.HISTORY_SECONDS / config.HISTORY_SAMPLE_DT) + 1
+        self.ratio_history = deque(maxlen=maxlen)
+
         self.running = True
 
     def handle_events(self) -> None:
@@ -61,6 +74,9 @@ class Game:
                         self.state = config.PAUSED
                     elif self.state == config.PAUSED:
                         self.state = config.PLAYING
+                
+                elif event.key == pygame.K_F1:
+                    self.show_hud = not self.show_hud
             
             # elif event.type == pygame.MOUSEMOTION:
             #     dx, dy = event.rel
@@ -84,6 +100,9 @@ class Game:
         # Only simulate while playing (future-proof for MENU etc.)
         if self.state != config.PLAYING:
             return
+        
+        # Update elapsed time
+        self.elapsed_time += dt
         
         # Update doctor
         self.doctor.update(dt)
@@ -124,6 +143,12 @@ class Game:
         self.healthy_count = len(self.agents) - self.infected_count
         self.infected_ratio = self.infected_count / max(1, len(self.agents))
 
+        # ---- Infection curve history sampling ----
+        self.history_timer += dt
+        if self.history_timer >= config.HISTORY_SAMPLE_DT:
+            self.history_timer = 0.0
+            self.ratio_history.append(self.infected_ratio)
+
         # ---- LOSE condition tracking ----
         if self.infected_ratio > config.LOSE_THRESHOLD_RATIO:
             self.time_above_threshold += dt
@@ -159,14 +184,27 @@ class Game:
         if config.SHOW_FPS:
             draw_fps(self.screen, self.clock, self.font_ui)
 
-        draw_stats(
-            self.screen,
-            self.font_ui,
-            self.infected_count,
-            self.healthy_count,
-            self.infected_ratio,
-            self.time_above_threshold,
-        )
+        if self.show_hud:
+            draw_hud(
+                self.screen,
+                self.font_ui,
+                self.infected_count,
+                self.healthy_count,
+                self.infected_ratio,
+                self.time_above_threshold,
+                self.elapsed_time,
+                self.doctor.ammo,
+                config.PELLET_AMMO_MAX,
+                self.doctor.reload_timer,
+                config.PELLET_RELOAD_TIME,
+                self.doctor.shot_cooldown_timer,
+            )
+
+            draw_infection_curve(
+                self.screen,
+                list(self.ratio_history),
+                config.GRAPH_RECT,
+            )
 
         if self.state == config.WIN:
             draw_center_message(self.screen, self.font_title, "YOU WIN", (80, 220, 120))
