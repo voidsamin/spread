@@ -237,6 +237,20 @@ class Game:
     def draw(self) -> None:
         self.screen.fill(config.BG_COLOR)
 
+        # If we're in MENU, draw only the menu (no sim clutter behind it)
+        if self.state == config.MENU:
+            draw_menu(
+                self.screen,
+                self.font_title,
+                self.font_ui,
+                "SPREAD",
+                self.main_menu_options,
+                self.menu_index,
+                subtitle="↑/↓ + Enter",
+            )
+            pygame.display.flip()
+            return
+
         # Draw agents
         for a in self.agents:
             a.draw(self.screen)

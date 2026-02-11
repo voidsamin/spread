@@ -98,22 +98,44 @@ def draw_menu(
     selected_index: int,
     subtitle: str | None = None,
 ) -> None:
+    # Dim background overlay
+    overlay = pygame.Surface((config.WIDTH, config.HEIGHT), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 160))
+    surface.blit(overlay, (0, 0))
+
+    # Panel
+    panel_w, panel_h = 360, 220
+    panel_x = (config.WIDTH - panel_w) // 2
+    panel_y = (config.HEIGHT - panel_h) // 2
+    panel_rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
+
+    pygame.draw.rect(surface, (20, 20, 20), panel_rect, border_radius=12)
+    pygame.draw.rect(surface, config.UI_COLOR, panel_rect, 2, border_radius=12)
+
     # Title
     title_surf = title_font.render(title, True, config.UI_COLOR)
-    title_rect = title_surf.get_rect(center=(config.WIDTH // 2, config.HEIGHT // 2 - 120))
+    title_rect = title_surf.get_rect(center=(config.WIDTH // 2, panel_y + 55))
     surface.blit(title_surf, title_rect)
 
-    # Optional subtitle
+    # Subtitle
     if subtitle:
-        sub_surf = ui_font.render(subtitle, True, config.UI_COLOR)
-        sub_rect = sub_surf.get_rect(center=(config.WIDTH // 2, config.HEIGHT // 2 - 80))
+        sub_surf = ui_font.render(subtitle, True, (180, 180, 180))
+        sub_rect = sub_surf.get_rect(center=(config.WIDTH // 2, panel_y + 95))
         surface.blit(sub_surf, sub_rect)
 
     # Options
-    start_y = config.HEIGHT // 2 - 10
+    start_y = panel_y + 130
     for i, text in enumerate(options):
-        prefix = "> " if i == selected_index else "  "
-        line = prefix + text
-        surf = ui_font.render(line, True, config.UI_COLOR)
-        rect = surf.get_rect(center=(config.WIDTH // 2, start_y + i * 30))
+        is_sel = (i == selected_index)
+        label = text
+
+        color = (255, 255, 255) if is_sel else (200, 200, 200)
+        surf = ui_font.render(label, True, color)
+        rect = surf.get_rect(center=(config.WIDTH // 2, start_y + i * 28))
         surface.blit(surf, rect)
+
+        # Selector marker
+        if is_sel:
+            marker = ui_font.render("▶", True, color)
+            mrect = marker.get_rect(midright=(rect.left - 12, rect.centery))
+            surface.blit(marker, mrect)
