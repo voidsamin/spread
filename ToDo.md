@@ -136,9 +136,10 @@ Deliverable: The player understands the system state at all times.
 ---
 
 ## 10) Menus, UX, and feedback (Week 5)
-- [ ] (★) Main menu: Start / Quit
-- [ ] (★) End screens: Win / Lose + restart
-- [ ] (★) Pause menu (Esc)
+- [x] (★) Main menu: Start / Quit
+- [x] (★) End screens: Win / Lose + restart
+- [x] (★) Pause menu (Esc)
+- [x] (★) Restart game from WIN / LOSE state
 - [ ] (☆) Settings screen (agent count, infection probability p, speed)
 
 Deliverable: A playable loop from menu → play → end → restart.

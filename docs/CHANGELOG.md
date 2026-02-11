@@ -1,6 +1,23 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.23 — Menu system implementation and UI rendering cleanup
+### Added
+- Main menu system (Start / Quit).
+- Pause menu (Resume / Restart / Quit to Menu).
+- End screens (WIN / LOSE) with restart and navigation options.
+- Restart functionality to reset simulation state without restarting the program.
+
+### Changed
+- Rendering pipeline reorganized to be fully state-driven (MENU, PLAYING, PAUSED, WIN, LOSE).
+- Simulation elements (agents, doctor, HUD, projectiles) no longer render behind the main menu.
+- End screens now use the unified menu overlay system instead of legacy center-message overlays.
+
+### Fixed / Notes
+- Removed duplicate "YOU WIN" overlay caused by overlapping rendering paths.
+- Improved visual clarity of start and end screens without altering gameplay logic.
+- Future refinement planned: separate Core HUD (essential gameplay info) from Debug Overlay (FPS, infection graph) with independent toggles.
+
 ## v0.22 — HUD and infection telemetry
 ### Added
 - Basic in-game HUD displaying simulation state (infected count, healthy count, infected percentage).
