@@ -88,3 +88,32 @@ def draw_center_message(surface: pygame.Surface, font: pygame.font.Font, text: s
     surf = font.render(text, True, color)
     rect = surf.get_rect(center=(config.WIDTH // 2, config.HEIGHT // 2))
     surface.blit(surf, rect)
+
+def draw_menu(
+    surface: pygame.Surface,
+    title_font: pygame.font.Font,
+    ui_font: pygame.font.Font,
+    title: str,
+    options: list[str],
+    selected_index: int,
+    subtitle: str | None = None,
+) -> None:
+    # Title
+    title_surf = title_font.render(title, True, config.UI_COLOR)
+    title_rect = title_surf.get_rect(center=(config.WIDTH // 2, config.HEIGHT // 2 - 120))
+    surface.blit(title_surf, title_rect)
+
+    # Optional subtitle
+    if subtitle:
+        sub_surf = ui_font.render(subtitle, True, config.UI_COLOR)
+        sub_rect = sub_surf.get_rect(center=(config.WIDTH // 2, config.HEIGHT // 2 - 80))
+        surface.blit(sub_surf, sub_rect)
+
+    # Options
+    start_y = config.HEIGHT // 2 - 10
+    for i, text in enumerate(options):
+        prefix = "> " if i == selected_index else "  "
+        line = prefix + text
+        surf = ui_font.render(line, True, config.UI_COLOR)
+        rect = surf.get_rect(center=(config.WIDTH // 2, start_y + i * 30))
+        surface.blit(surf, rect)

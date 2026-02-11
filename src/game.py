@@ -9,7 +9,7 @@ import config
 from agents import spawn_agents, resolve_agent_collisions
 from doctor import Doctor
 from projectiles import Projectile
-from ui import draw_fps, draw_hud, draw_infection_curve, draw_center_message
+from ui import draw_fps, draw_hud, draw_infection_curve, draw_center_message, draw_menu
 
 
 class Game:
@@ -41,8 +41,14 @@ class Game:
         # Lose-condition timer tracking
         self.time_above_threshold = 0.0
 
-        # Game state
-        self.state = config.PLAYING
+        # Initial game state (start at main menu) 
+        self.state = config.MENU
+        self.menu_index = 0
+
+        # Menu options (for future expansion, currently unused since we have no real menu navigation)
+        self.main_menu_options = ["Start", "Quit"]
+        self.pause_menu_options = ["Resume", "Restart", "Quit to Menu"]
+        self.end_menu_options = ["Restart", "Quit to Menu", "Quit"]
 
         # Win-condition timer
         self.time_below_win_threshold = 0.0
@@ -60,40 +66,101 @@ class Game:
 
         self.running = True
 
+    def reset_run(self) -> None:
+        """Reset a play session (used for Restart)."""
+        self.agents = spawn_agents()
+        self.projectiles.clear()
+
+        # Reset stats/timers
+        self.infected_count = 0
+        self.healthy_count = 0
+        self.infected_ratio = 0.0
+        self.time_above_threshold = 0.0
+        self.time_below_win_threshold = 0.0
+
+        # Reset telemetry
+        self.elapsed_time = 0.0
+        self.history_timer = 0.0
+        self.ratio_history.clear()
+
+        # Reset doctor gameplay state (ammo/cooldowns)
+        self.doctor.cooldown_timer = 0.0
+        self.doctor.shot_cooldown_timer = 0.0
+        self.doctor.ammo = config.PELLET_AMMO_MAX
+        self.doctor.reload_timer = 0.0
+
     def handle_events(self) -> None:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
 
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
+                # Global quit
+                if event.key == pygame.K_q:
                     self.running = False
 
-                elif event.key == pygame.K_p:
-                    if self.state == config.PLAYING:
+                # ---------- MENU ----------
+                if self.state == config.MENU:
+                    if event.key in (pygame.K_UP, pygame.K_w):
+                        self.menu_index = (self.menu_index - 1) % len(self.main_menu_options)
+                    elif event.key in (pygame.K_DOWN, pygame.K_s):
+                        self.menu_index = (self.menu_index + 1) % len(self.main_menu_options)
+                    elif event.key == pygame.K_RETURN:
+                        choice = self.main_menu_options[self.menu_index]
+                        if choice == "Start":
+                            self.reset_run()
+                            self.state = config.PLAYING
+                        elif choice == "Quit":
+                            self.running = False
+
+                # ---------- PLAYING ----------
+                elif self.state == config.PLAYING:
+                    if event.key == pygame.K_ESCAPE:
                         self.state = config.PAUSED
-                    elif self.state == config.PAUSED:
+                        self.menu_index = 0
+                    elif event.key == pygame.K_F1:
+                        self.show_hud = not self.show_hud
+
+                # ---------- PAUSED ----------
+                elif self.state == config.PAUSED:
+                    if event.key == pygame.K_ESCAPE:
                         self.state = config.PLAYING
-                
-                elif event.key == pygame.K_F1:
-                    self.show_hud = not self.show_hud
-            
-            # elif event.type == pygame.MOUSEMOTION:
-            #     dx, dy = event.rel
-            #     self.doctor.update_aim(dx, dy)
+                    elif event.key in (pygame.K_UP, pygame.K_w):
+                        self.menu_index = (self.menu_index - 1) % len(self.pause_menu_options)
+                    elif event.key in (pygame.K_DOWN, pygame.K_s):
+                        self.menu_index = (self.menu_index + 1) % len(self.pause_menu_options)
+                    elif event.key == pygame.K_RETURN:
+                        choice = self.pause_menu_options[self.menu_index]
+                        if choice == "Resume":
+                            self.state = config.PLAYING
+                        elif choice == "Restart":
+                            self.reset_run()
+                            self.state = config.PLAYING
+                        elif choice == "Quit to Menu":
+                            self.state = config.MENU
+                            self.menu_index = 0
+
+                # ---------- WIN / LOSE ----------
+                elif self.state in (config.WIN, config.LOSE):
+                    if event.key == pygame.K_r:
+                        self.reset_run()
+                        self.state = config.PLAYING
+                    elif event.key == pygame.K_m:
+                        self.state = config.MENU
+                        self.menu_index = 0
+                    elif event.key == pygame.K_ESCAPE:
+                        self.state = config.MENU
+                        self.menu_index = 0
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Only allow cure/shoot while PLAYING
                 if self.state == config.PLAYING:
-                    # Left click: cure
                     if event.button == 1:
                         self.doctor.try_cure(self.agents)
-
-                    # Right click: shoot pellet
                     elif event.button == 3:
                         proj = self.doctor.try_shoot()
                         if proj is not None:
                             self.projectiles.append(proj)
-
 
 
     def update(self, dt: float) -> None:
@@ -212,6 +279,51 @@ class Game:
             draw_center_message(self.screen, self.font_title, "YOU LOSE", (220, 80, 80))
         elif self.state == config.PAUSED:
             draw_center_message(self.screen, self.font_title, "PAUSED", config.UI_COLOR)
+
+        # ----- State overlays -----
+        if self.state == config.MENU:
+            draw_menu(
+                self.screen,
+                self.font_title,
+                self.font_ui,
+                "SPREAD",
+                self.main_menu_options,
+                self.menu_index,
+                subtitle="↑/↓ + Enter",
+            )
+
+        elif self.state == config.PAUSED:
+            draw_menu(
+                self.screen,
+                self.font_title,
+                self.font_ui,
+                "PAUSED",
+                self.pause_menu_options,
+                self.menu_index,
+                subtitle="Esc to resume",
+            )
+
+        elif self.state == config.WIN:
+            draw_menu(
+                self.screen,
+                self.font_title,
+                self.font_ui,
+                "YOU WIN",
+                self.end_menu_options,
+                0,
+                subtitle="R = Restart, M = Menu, Q = Quit",
+            )
+
+        elif self.state == config.LOSE:
+            draw_menu(
+                self.screen,
+                self.font_title,
+                self.font_ui,
+                "YOU LOSE",
+                self.end_menu_options,
+                0,
+                subtitle="R = Restart, M = Menu, Q = Quit",
+            )
 
         pygame.display.flip()
 
