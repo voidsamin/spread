@@ -28,7 +28,7 @@ See the [Project Proposal](docs/Simulation Lab Project Proposal.pdf).
   - [x] FPS cap + on-screen FPS counter (debug)
 - [x] (★) Implement a simple camera-less 2D world (screen == world)
 
-Deliverable: A clean blank scene with a stable loop and debug overlay. fileciteturn0file1
+Deliverable: A clean blank scene with a stable loop and debug overlay.
 
 ---
 
@@ -81,7 +81,7 @@ Deliverable: Infection spreads stochastically across collisions.
 
 ## 6) Win/Lose rules + stopwatch (Week 2)
 From proposal:
-- **Lose** if infection rate exceeds **50%** for over **2 minutes**. fileciteturn0file0
+- **Lose** if infection rate exceeds **50%** for over **2 minutes**.
 
 - [x] (★) Implement threshold logic:
   - [x] When infected_ratio > 0.5, accumulate `time_above_50`
