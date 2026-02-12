@@ -140,7 +140,7 @@ def draw_menu(
         option_rects.append(click_rect)
 
         if is_sel:
-            marker = ui_font.render("▶", True, color)
+            marker = ui_font.render(">>", True, color)
             mrect = marker.get_rect(midright=(rect.left - 14, rect.centery))
             surface.blit(marker, mrect)
 

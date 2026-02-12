@@ -283,7 +283,7 @@ class Game:
                 "SPREAD",
                 self.main_menu_options,
                 self.menu_index,
-                subtitle="↑/↓ + Enter",
+                subtitle="Up/Down Arrow Keys + Enter",
             )
             pygame.display.flip()
             return
