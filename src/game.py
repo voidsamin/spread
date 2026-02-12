@@ -9,7 +9,7 @@ import config
 from agents import spawn_agents, resolve_agent_collisions
 from doctor import Doctor
 from projectiles import Projectile
-from ui import draw_fps, draw_hud, draw_infection_curve, draw_center_message, draw_menu
+from ui import draw_fps, draw_hud, draw_infection_curve, draw_menu
 
 
 class Game:
@@ -45,7 +45,7 @@ class Game:
         self.state = config.MENU
         self.menu_index = 0
 
-        # Menu options (for future expansion, currently unused since we have no real menu navigation)
+        # Menu options (could be expanded with more states like Settings, etc.)
         self.main_menu_options = ["Start", "Quit"]
         self.pause_menu_options = ["Resume", "Restart", "Quit to Menu"]
         self.end_menu_options = ["Restart", "Quit to Menu", "Quit"]
@@ -173,7 +173,7 @@ class Game:
                 # Hover selection for menus
                 if self.state in (config.MENU, config.PAUSED, config.WIN, config.LOSE):
                     mx, my = event.pos
-                    for i, r in enumerate(getattr(self, "menu_option_rects", [])):
+                    for i, r in enumerate(self.menu_option_rects or []):
                         if r.collidepoint(mx, my):
                             self.menu_index = i
                             break
@@ -182,7 +182,7 @@ class Game:
                 # Menu clicks
                 if event.button == 1 and self.state in (config.MENU, config.PAUSED, config.WIN, config.LOSE):
                     mx, my = event.pos
-                    for i, r in enumerate(getattr(self, "menu_option_rects", [])):
+                    for i, r in enumerate(self.menu_option_rects or []):
                         if r.collidepoint(mx, my):
                             self.menu_index = i
                             # Simulate pressing Enter
@@ -261,6 +261,7 @@ class Game:
 
         if self.time_above_threshold >= config.LOSE_THRESHOLD_SECONDS:
             self.state = config.LOSE
+            self.menu_index = 0
 
         # ---- WIN condition tracking ----
         if self.infected_ratio < config.WIN_THRESHOLD_RATIO:
@@ -270,6 +271,7 @@ class Game:
 
         if self.time_below_win_threshold >= config.WIN_THRESHOLD_SECONDS:
             self.state = config.WIN
+            self.menu_index = 0
 
     def draw(self) -> None:
         self.screen.fill(config.BG_COLOR)
