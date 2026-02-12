@@ -1,7 +1,7 @@
 # SPREAD — To-Do List (Build Plan)
 
 This is the step-by-step build checklist for **SPREAD** (agent-based disease transmission arcade sim) as described in the project proposal.
-See the [Project Proposal](docs/Simulation Lab Project Proposal.pdf).
+See the [Project Proposal](docs/Simulation%20Lab%20Project%20Proposal.pdf).
 
 > **Legend:**  
 > - [ ] Not started task
