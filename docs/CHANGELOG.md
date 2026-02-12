@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.24 — Menu interaction improvements (keyboard + mouse support)
+### Added
+- Full keyboard navigation support for WIN/LOSE end screens (↑/↓ + Enter).
+- Mouse hover highlighting for menu options (main menu, pause menu, end screens).
+- Mouse click selection for menu options (left-click triggers selection).
+
+### Changed
+- Unified menu selection logic so both keyboard (Enter) and mouse clicks use the same execution path.
+- `draw_menu()` now returns clickable option rectangles to enable proper mouse interaction.
+
+### Fixed / Notes
+- Fixed inability to navigate end-screen menus using arrow keys.
+- Fixed lack of mouse interaction on menu screens.
+- No gameplay logic changed; this update improves UI usability and consistency only.
+
 ## v0.23 — Menu system implementation and UI rendering cleanup
 ### Added
 - Main menu system (Start / Quit).
