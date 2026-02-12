@@ -142,7 +142,21 @@ class Game:
 
                 # ---------- WIN / LOSE ----------
                 elif self.state in (config.WIN, config.LOSE):
-                    if event.key == pygame.K_r:
+                    if event.key in (pygame.K_UP, pygame.K_w):
+                        self.menu_index = (self.menu_index - 1) % len(self.end_menu_options)
+                    elif event.key in (pygame.K_DOWN, pygame.K_s):
+                        self.menu_index = (self.menu_index + 1) % len(self.end_menu_options)
+                    elif event.key == pygame.K_RETURN:
+                        choice = self.end_menu_options[self.menu_index]
+                        if choice == "Restart":
+                            self.reset_run()
+                            self.state = config.PLAYING
+                        elif choice == "Quit to Menu":
+                            self.state = config.MENU
+                            self.menu_index = 0
+                        elif choice == "Quit":
+                            self.running = False
+                    elif event.key == pygame.K_r:
                         self.reset_run()
                         self.state = config.PLAYING
                     elif event.key == pygame.K_m:
@@ -309,7 +323,7 @@ class Game:
                 self.font_ui,
                 "YOU WIN",
                 self.end_menu_options,
-                0,
+                self.menu_index,
                 subtitle="R = Restart, M = Menu, Q = Quit",
             )
 
@@ -320,7 +334,7 @@ class Game:
                 self.font_ui,
                 "YOU LOSE",
                 self.end_menu_options,
-                0,
+                self.menu_index,
                 subtitle="R = Restart, M = Menu, Q = Quit",
             )
 
