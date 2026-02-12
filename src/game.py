@@ -237,7 +237,7 @@ class Game:
     def draw(self) -> None:
         self.screen.fill(config.BG_COLOR)
 
-        # If we're in MENU, draw only the menu (no sim clutter behind it)
+        # ---------- MENU ----------
         if self.state == config.MENU:
             draw_menu(
                 self.screen,
@@ -251,62 +251,47 @@ class Game:
             pygame.display.flip()
             return
 
-        # Draw agents
+        # ---------- WORLD (PLAYING / PAUSED / WIN / LOSE) ----------
         for a in self.agents:
             a.draw(self.screen)
-        
-        # Draw projectiles
+
         for p in self.projectiles:
             p.draw(self.screen)
-        
-        # Draw doctor on top
-        self.doctor.draw(self.screen)
 
-        if config.SHOW_FPS:
-            draw_fps(self.screen, self.clock, self.font_ui)
+        # Only draw doctor while actively playing (cleaner for overlays)
+        if self.state == config.PLAYING:
+            self.doctor.draw(self.screen)
 
-        if self.show_hud:
-            draw_hud(
-                self.screen,
-                self.font_ui,
-                self.infected_count,
-                self.healthy_count,
-                self.infected_ratio,
-                self.time_above_threshold,
-                self.elapsed_time,
-                self.doctor.ammo,
-                config.PELLET_AMMO_MAX,
-                self.doctor.reload_timer,
-                config.PELLET_RELOAD_TIME,
-                self.doctor.shot_cooldown_timer,
-            )
+        # ---------- HUD / DEBUG ----------
+        # HUD should only show in PLAYING (optional: also show in PAUSED)
+        if self.state == config.PLAYING:
+            if self.show_hud:
+                draw_hud(
+                    self.screen,
+                    self.font_ui,
+                    self.infected_count,
+                    self.healthy_count,
+                    self.infected_ratio,
+                    self.time_above_threshold,
+                    self.elapsed_time,
+                    self.doctor.ammo,
+                    config.PELLET_AMMO_MAX,
+                    self.doctor.reload_timer,
+                    config.PELLET_RELOAD_TIME,
+                    self.doctor.shot_cooldown_timer,
+                )
 
-            draw_infection_curve(
-                self.screen,
-                list(self.ratio_history),
-                config.GRAPH_RECT,
-            )
+                draw_infection_curve(
+                    self.screen,
+                    list(self.ratio_history),
+                    config.GRAPH_RECT,
+                )
 
-        if self.state == config.WIN:
-            draw_center_message(self.screen, self.font_title, "YOU WIN", (80, 220, 120))
-        elif self.state == config.LOSE:
-            draw_center_message(self.screen, self.font_title, "YOU LOSE", (220, 80, 80))
-        elif self.state == config.PAUSED:
-            draw_center_message(self.screen, self.font_title, "PAUSED", config.UI_COLOR)
+            if config.SHOW_FPS:
+                draw_fps(self.screen, self.clock, self.font_ui)
 
-        # ----- State overlays -----
-        if self.state == config.MENU:
-            draw_menu(
-                self.screen,
-                self.font_title,
-                self.font_ui,
-                "SPREAD",
-                self.main_menu_options,
-                self.menu_index,
-                subtitle="↑/↓ + Enter",
-            )
-
-        elif self.state == config.PAUSED:
+        # ---------- OVERLAYS ----------
+        if self.state == config.PAUSED:
             draw_menu(
                 self.screen,
                 self.font_title,
