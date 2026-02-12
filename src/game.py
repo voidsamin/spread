@@ -50,6 +50,9 @@ class Game:
         self.pause_menu_options = ["Resume", "Restart", "Quit to Menu"]
         self.end_menu_options = ["Restart", "Quit to Menu", "Quit"]
 
+        # Pre-calculate menu option rects for mouse interaction (future-proofing for mouse support)
+        self.menu_option_rects = []
+
         # Win-condition timer
         self.time_below_win_threshold = 0.0
 
@@ -166,8 +169,27 @@ class Game:
                         self.state = config.MENU
                         self.menu_index = 0
 
+            elif event.type == pygame.MOUSEMOTION:
+                # Hover selection for menus
+                if self.state in (config.MENU, config.PAUSED, config.WIN, config.LOSE):
+                    mx, my = event.pos
+                    for i, r in enumerate(getattr(self, "menu_option_rects", [])):
+                        if r.collidepoint(mx, my):
+                            self.menu_index = i
+                            break
+
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                # Only allow cure/shoot while PLAYING
+                # Menu clicks
+                if event.button == 1 and self.state in (config.MENU, config.PAUSED, config.WIN, config.LOSE):
+                    mx, my = event.pos
+                    for i, r in enumerate(getattr(self, "menu_option_rects", [])):
+                        if r.collidepoint(mx, my):
+                            self.menu_index = i
+                            # Simulate pressing Enter
+                            pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN))
+                            return
+
+                # Gameplay clicks
                 if self.state == config.PLAYING:
                     if event.button == 1:
                         self.doctor.try_cure(self.agents)
@@ -175,6 +197,7 @@ class Game:
                         proj = self.doctor.try_shoot()
                         if proj is not None:
                             self.projectiles.append(proj)
+
 
 
     def update(self, dt: float) -> None:
@@ -253,7 +276,7 @@ class Game:
 
         # ---------- MENU ----------
         if self.state == config.MENU:
-            draw_menu(
+            self.menu_option_rects = draw_menu(
                 self.screen,
                 self.font_title,
                 self.font_ui,
@@ -306,7 +329,7 @@ class Game:
 
         # ---------- OVERLAYS ----------
         if self.state == config.PAUSED:
-            draw_menu(
+            self.menu_option_rects = draw_menu(
                 self.screen,
                 self.font_title,
                 self.font_ui,
@@ -317,7 +340,7 @@ class Game:
             )
 
         elif self.state == config.WIN:
-            draw_menu(
+            self.menu_option_rects = draw_menu(
                 self.screen,
                 self.font_title,
                 self.font_ui,
@@ -328,7 +351,7 @@ class Game:
             )
 
         elif self.state == config.LOSE:
-            draw_menu(
+            self.menu_option_rects = draw_menu(
                 self.screen,
                 self.font_title,
                 self.font_ui,

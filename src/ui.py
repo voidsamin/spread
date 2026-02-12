@@ -97,14 +97,14 @@ def draw_menu(
     options: list[str],
     selected_index: int,
     subtitle: str | None = None,
-) -> None:
+) -> list[pygame.Rect]:
     # Dim background overlay
     overlay = pygame.Surface((config.WIDTH, config.HEIGHT), pygame.SRCALPHA)
     overlay.fill((0, 0, 0, 160))
     surface.blit(overlay, (0, 0))
 
     # Panel
-    panel_w, panel_h = 360, 220
+    panel_w, panel_h = 360, 240
     panel_x = (config.WIDTH - panel_w) // 2
     panel_y = (config.HEIGHT - panel_h) // 2
     panel_rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
@@ -124,18 +124,24 @@ def draw_menu(
         surface.blit(sub_surf, sub_rect)
 
     # Options
-    start_y = panel_y + 130
+    option_rects: list[pygame.Rect] = []
+    start_y = panel_y + 135
+
     for i, text in enumerate(options):
         is_sel = (i == selected_index)
-        label = text
-
         color = (255, 255, 255) if is_sel else (200, 200, 200)
-        surf = ui_font.render(label, True, color)
-        rect = surf.get_rect(center=(config.WIDTH // 2, start_y + i * 28))
+
+        surf = ui_font.render(text, True, color)
+        rect = surf.get_rect(center=(config.WIDTH // 2, start_y + i * 30))
         surface.blit(surf, rect)
 
-        # Selector marker
+        # Expand clickable area a bit
+        click_rect = rect.inflate(120, 10)
+        option_rects.append(click_rect)
+
         if is_sel:
             marker = ui_font.render("▶", True, color)
-            mrect = marker.get_rect(midright=(rect.left - 12, rect.centery))
+            mrect = marker.get_rect(midright=(rect.left - 14, rect.centery))
             surface.blit(marker, mrect)
+
+    return option_rects
