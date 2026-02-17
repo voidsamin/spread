@@ -20,7 +20,7 @@ class Agent:
     radius: int
     infected: bool = False  # state: healthy(False) / infected(True)
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float, difficulty_multiplier: float = 1.0) -> None:
         # Stochastic "wander": small random acceleration that changes velocity gradually
         # This makes movement look more human/random without teleporting directions.
         jitter = pygame.Vector2(
@@ -31,14 +31,15 @@ class Agent:
         if jitter.length_squared() > 0:
             jitter = jitter.normalize()
 
-        # Apply wander strength scaled by dt
-        self.vel += jitter * config.WANDER_STRENGTH * dt
+        # Apply wander strength scaled by dt and difficulty multiplier
+        self.vel += jitter * config.WANDER_STRENGTH * dt * difficulty_multiplier
 
-        # Clamp speed so agents don't accelerate forever
-        _clamp_speed(self.vel, config.MAX_SPEED)
+        # Clamp speed so agents don't accelerate forever (scaled by difficulty)
+        _clamp_speed(self.vel, config.MAX_SPEED * difficulty_multiplier)
 
-        # Move
+        # Move (velocity already affected by difficulty through wander and clamping)
         self.pos += self.vel * dt
+
 
 
     def bounce_off_walls(self, width: int, height: int) -> None:

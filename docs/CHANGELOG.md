@@ -1,6 +1,30 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.25 — Global difficulty scaling + in-game settings menu
+### Added
+- **Global difficulty scaling system**: Agent speed now increases over time based on a configurable curve.
+  - Difficulty multiplier ramps from 1.0x to a configurable maximum (default: 2.5x) over a set time period (default: 3 minutes).
+  - Three curve types supported: linear, exponential, and sigmoid (default: sigmoid for smooth progression).
+  - Difficulty multiplier displayed in HUD when enabled.
+  - All parameters configurable via `config.py` or the new settings menu.
+- **In-game settings menu**: Fully interactive settings menu accessible from the main menu.
+  - Adjust difficulty parameters: enable/disable scaling, max multiplier, ramp time, curve type, and steepness.
+  - Adjust game parameters: agent count, infection probability, and initial infected count.
+  - Real-time value updates with visual feedback.
+  - Navigate with Up/Down, adjust with Left/Right arrow keys.
+  - Apply changes or cancel back to menu.
+
+### Changed
+- Main menu now includes "Settings" option between "Start" and "Quit".
+- Agent movement system updated to accept and apply difficulty multiplier to speed and acceleration.
+- Difficulty calculation performed each frame based on elapsed time and selected curve type.
+
+### Fixed / Notes
+- Settings are applied to the config module when "Apply & Back" is selected, allowing changes to take effect on the next game start.
+- Difficulty scaling can be toggled on/off via settings menu without editing config files.
+- Provides players with easy access to customize game difficulty and parameters for different skill levels.
+
 ## v0.24 — Menu interaction improvements (keyboard + mouse support)
 ### Added
 - Full keyboard navigation support for WIN/LOSE end screens (↑/↓ + Enter).

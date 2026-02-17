@@ -50,6 +50,7 @@ SHOW_FPS = True  # toggle debug fps overlay
 # Game states
 # -----------------------------
 MENU = "MENU"
+SETTINGS = "SETTINGS"
 PLAYING = "PLAYING"
 PAUSED = "PAUSED"
 WIN = "WIN"
@@ -129,3 +130,15 @@ HISTORY_SAMPLE_DT = 0.25     # sample infected_ratio every 0.25s
 
 # Graph placement (x, y, width, height)
 GRAPH_RECT = (540, 10, 250, 90)
+
+
+
+# -----------------------------
+# Difficulty scaling
+# -----------------------------
+DIFFICULTY_ENABLED = True               # Toggle difficulty scaling on/off
+DIFFICULTY_START_MULTIPLIER = 1.0       # Initial speed multiplier (1.0 = normal speed)
+DIFFICULTY_MAX_MULTIPLIER = 2.5         # Maximum speed multiplier
+DIFFICULTY_RAMP_TIME = 180.0            # Time in seconds to reach max difficulty (3 minutes)
+DIFFICULTY_CURVE_TYPE = "sigmoid"       # Curve shape: "linear", "exponential", or "sigmoid"
+DIFFICULTY_CURVE_STEEPNESS = 0.5        # Controls curve aggressiveness (0.1 = gentle, 1.0 = steep)

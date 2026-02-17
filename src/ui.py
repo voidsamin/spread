@@ -29,6 +29,7 @@ def draw_hud(
     reload_timer: float,
     reload_time: float,
     shot_cd: float,
+    difficulty_multiplier: float = 1.0,
 ) -> None:
     # Build lines
     lines = [
@@ -39,6 +40,10 @@ def draw_hud(
         f">50% timer: {t_above:.1f}s",
         f"Pellets: {ammo}/{ammo_max}",
     ]
+
+    # Show difficulty multiplier if enabled
+    if config.DIFFICULTY_ENABLED:
+        lines.append(f"Speed: {difficulty_multiplier:.2f}x")
 
     # Reload / cooldown hints
     if ammo <= 0:
@@ -143,5 +148,87 @@ def draw_menu(
             marker = ui_font.render(">>", True, color)
             mrect = marker.get_rect(midright=(rect.left - 14, rect.centery))
             surface.blit(marker, mrect)
+
+    return option_rects
+
+
+def draw_settings_menu(
+    surface: pygame.Surface,
+    title_font: pygame.font.Font,
+    ui_font: pygame.font.Font,
+    settings: list[dict],
+    selected_index: int,
+) -> list[pygame.Rect]:
+    """Draw the settings menu with adjustable values."""
+    # Dim background overlay
+    overlay = pygame.Surface((config.WIDTH, config.HEIGHT), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 160))
+    surface.blit(overlay, (0, 0))
+
+    # Larger panel for settings
+    panel_w, panel_h = 600, 500
+    panel_x = (config.WIDTH - panel_w) // 2
+    panel_y = (config.HEIGHT - panel_h) // 2
+    panel_rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
+
+    pygame.draw.rect(surface, (20, 20, 20), panel_rect, border_radius=12)
+    pygame.draw.rect(surface, config.UI_COLOR, panel_rect, 2, border_radius=12)
+
+    # Title
+    title_surf = title_font.render("SETTINGS", True, config.UI_COLOR)
+    title_rect = title_surf.get_rect(center=(config.WIDTH // 2, panel_y + 40))
+    surface.blit(title_surf, title_rect)
+
+    # Subtitle
+    subtitle = "← → to adjust, Enter to apply, Esc to cancel"
+    sub_surf = ui_font.render(subtitle, True, (180, 180, 180))
+    sub_rect = sub_surf.get_rect(center=(config.WIDTH // 2, panel_y + 75))
+    surface.blit(sub_surf, sub_rect)
+
+    # Settings list
+    option_rects: list[pygame.Rect] = []
+    start_y = panel_y + 110
+    line_height = 32
+
+    for i, setting in enumerate(settings):
+        is_sel = (i == selected_index)
+        y_pos = start_y + i * line_height
+
+        # Setting name
+        name_color = (255, 255, 255) if is_sel else (200, 200, 200)
+        name_surf = ui_font.render(setting["name"], True, name_color)
+        name_rect = name_surf.get_rect(midleft=(panel_x + 30, y_pos))
+        surface.blit(name_surf, name_rect)
+
+        # Setting value (right-aligned)
+        if setting["type"] != "action":
+            value = setting["value"]
+            
+            # Format value based on type
+            if setting["type"] == "bool":
+                value_str = "ON" if value else "OFF"
+            elif setting["type"] == "float":
+                value_str = f"{value:.2f}"
+            elif setting["type"] == "int":
+                value_str = str(value)
+            elif setting["type"] == "enum":
+                value_str = value
+            else:
+                value_str = str(value)
+            
+            value_color = (100, 200, 255) if is_sel else (150, 150, 150)
+            value_surf = ui_font.render(value_str, True, value_color)
+            value_rect = value_surf.get_rect(midright=(panel_x + panel_w - 30, y_pos))
+            surface.blit(value_surf, value_rect)
+
+        # Selection marker
+        if is_sel:
+            marker = ui_font.render(">>", True, name_color)
+            mrect = marker.get_rect(midright=(name_rect.left - 10, y_pos))
+            surface.blit(marker, mrect)
+
+        # Create clickable rect
+        click_rect = pygame.Rect(panel_x + 20, y_pos - 12, panel_w - 40, line_height - 4)
+        option_rects.append(click_rect)
 
     return option_rects

@@ -9,7 +9,7 @@ import config
 from agents import spawn_agents, resolve_agent_collisions
 from doctor import Doctor
 from projectiles import Projectile
-from ui import draw_fps, draw_hud, draw_infection_curve, draw_menu
+from ui import draw_fps, draw_hud, draw_infection_curve, draw_menu, draw_settings_menu
 
 
 class Game:
@@ -46,7 +46,7 @@ class Game:
         self.menu_index = 0
 
         # Menu options (could be expanded with more states like Settings, etc.)
-        self.main_menu_options = ["Start", "Quit"]
+        self.main_menu_options = ["Start", "Settings", "Quit"]
         self.pause_menu_options = ["Resume", "Restart", "Quit to Menu"]
         self.end_menu_options = ["Restart", "Quit to Menu", "Quit"]
 
@@ -66,6 +66,86 @@ class Game:
         self.history_timer = 0.0
         maxlen = int(config.HISTORY_SECONDS / config.HISTORY_SAMPLE_DT) + 1
         self.ratio_history = deque(maxlen=maxlen)
+
+        # Difficulty scaling
+        self.difficulty_multiplier = config.DIFFICULTY_START_MULTIPLIER
+
+        # Settings menu
+        self.settings_menu_index = 0
+        self.settings = [
+            {
+                "name": "Difficulty Enabled",
+                "key": "difficulty_enabled",
+                "type": "bool",
+                "value": config.DIFFICULTY_ENABLED,
+            },
+            {
+                "name": "Max Speed Multiplier",
+                "key": "max_multiplier",
+                "type": "float",
+                "value": config.DIFFICULTY_MAX_MULTIPLIER,
+                "min": 1.5,
+                "max": 4.0,
+                "step": 0.5,
+            },
+            {
+                "name": "Ramp Time (seconds)",
+                "key": "ramp_time",
+                "type": "float",
+                "value": config.DIFFICULTY_RAMP_TIME,
+                "min": 60.0,
+                "max": 300.0,
+                "step": 30.0,
+            },
+            {
+                "name": "Curve Type",
+                "key": "curve_type",
+                "type": "enum",
+                "value": config.DIFFICULTY_CURVE_TYPE,
+                "options": ["linear", "exponential", "sigmoid"],
+            },
+            {
+                "name": "Curve Steepness",
+                "key": "curve_steepness",
+                "type": "float",
+                "value": config.DIFFICULTY_CURVE_STEEPNESS,
+                "min": 0.1,
+                "max": 1.0,
+                "step": 0.1,
+            },
+            {
+                "name": "Agent Count",
+                "key": "agent_count",
+                "type": "int",
+                "value": config.AGENT_COUNT,
+                "min": 50,
+                "max": 300,
+                "step": 25,
+            },
+            {
+                "name": "Infection Probability",
+                "key": "infection_prob",
+                "type": "float",
+                "value": config.INFECTION_PROBABILITY,
+                "min": 0.05,
+                "max": 0.50,
+                "step": 0.05,
+            },
+            {
+                "name": "Initial Infected",
+                "key": "initial_infected",
+                "type": "int",
+                "value": config.INITIAL_INFECTED,
+                "min": 1,
+                "max": 10,
+                "step": 1,
+            },
+            {
+                "name": "Apply & Back",
+                "key": "_apply",
+                "type": "action",
+            },
+        ]
 
         self.running = True
 
@@ -92,6 +172,108 @@ class Game:
         self.doctor.ammo = config.PELLET_AMMO_MAX
         self.doctor.reload_timer = 0.0
 
+        # Reset difficulty
+        self.difficulty_multiplier = config.DIFFICULTY_START_MULTIPLIER
+
+    def calculate_difficulty_multiplier(self) -> float:
+        """Calculate the current difficulty multiplier based on elapsed time and curve type."""
+        if not config.DIFFICULTY_ENABLED:
+            return config.DIFFICULTY_START_MULTIPLIER
+        
+        # Normalize time to [0, 1] range based on ramp time
+        t = min(self.elapsed_time / config.DIFFICULTY_RAMP_TIME, 1.0)
+        
+        start = config.DIFFICULTY_START_MULTIPLIER
+        max_mult = config.DIFFICULTY_MAX_MULTIPLIER
+        delta = max_mult - start
+        
+        curve_type = config.DIFFICULTY_CURVE_TYPE.lower()
+        steepness = config.DIFFICULTY_CURVE_STEEPNESS
+        
+        if curve_type == "linear":
+            # Simple linear interpolation
+            return start + delta * t
+        
+        elif curve_type == "exponential":
+            # Exponential curve: slow start, fast end
+            # Use steepness to control the exponent (higher = steeper)
+            exponent = 1.0 + steepness * 3.0  # Maps 0.5 -> 2.5
+            return start + delta * (t ** exponent)
+        
+        elif curve_type == "sigmoid":
+            # Sigmoid curve: smooth S-curve with gradual start and end
+            # Center at t=0.5, use steepness to control transition sharpness
+            import math
+            # Shift t to [-0.5, 0.5] and scale by steepness
+            t_shifted = (t - 0.5) * steepness * 10.0
+            sigmoid = 1.0 / (1.0 + math.exp(-t_shifted))
+            return start + delta * sigmoid
+        
+        else:
+            # Default to linear if unknown curve type
+            return start + delta * t
+
+
+    def apply_settings(self) -> None:
+        """Apply current settings values to the config module."""
+        for setting in self.settings:
+            if setting["type"] == "action":
+                continue
+            
+            key = setting["key"]
+            value = setting["value"]
+            
+            # Map setting keys to config attributes
+            if key == "difficulty_enabled":
+                config.DIFFICULTY_ENABLED = value
+            elif key == "max_multiplier":
+                config.DIFFICULTY_MAX_MULTIPLIER = value
+            elif key == "ramp_time":
+                config.DIFFICULTY_RAMP_TIME = value
+            elif key == "curve_type":
+                config.DIFFICULTY_CURVE_TYPE = value
+            elif key == "curve_steepness":
+                config.DIFFICULTY_CURVE_STEEPNESS = value
+            elif key == "agent_count":
+                config.AGENT_COUNT = value
+            elif key == "infection_prob":
+                config.INFECTION_PROBABILITY = value
+            elif key == "initial_infected":
+                config.INITIAL_INFECTED = value
+
+    def adjust_setting(self, delta: int) -> None:
+        """Adjust the currently selected setting by delta (-1 for left, +1 for right)."""
+        setting = self.settings[self.settings_menu_index]
+        
+        if setting["type"] == "action":
+            return  # Can't adjust action items
+        
+        if setting["type"] == "bool":
+            # Toggle boolean
+            setting["value"] = not setting["value"]
+        
+        elif setting["type"] == "enum":
+            # Cycle through options
+            options = setting["options"]
+            current_idx = options.index(setting["value"])
+            new_idx = (current_idx + delta) % len(options)
+            setting["value"] = options[new_idx]
+        
+        elif setting["type"] in ("int", "float"):
+            # Adjust numeric value
+            step = setting["step"]
+            min_val = setting["min"]
+            max_val = setting["max"]
+            
+            new_value = setting["value"] + (delta * step)
+            new_value = max(min_val, min(max_val, new_value))
+            
+            if setting["type"] == "int":
+                setting["value"] = int(new_value)
+            else:
+                setting["value"] = round(new_value, 2)
+
+
     def handle_events(self) -> None:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -113,8 +295,32 @@ class Game:
                         if choice == "Start":
                             self.reset_run()
                             self.state = config.PLAYING
+                        elif choice == "Settings":
+                            self.state = config.SETTINGS
+                            self.settings_menu_index = 0
                         elif choice == "Quit":
                             self.running = False
+
+                # ---------- SETTINGS ----------
+                elif self.state == config.SETTINGS:
+                    if event.key == pygame.K_ESCAPE:
+                        # Cancel and return to menu
+                        self.state = config.MENU
+                        self.menu_index = 0
+                    elif event.key in (pygame.K_UP, pygame.K_w):
+                        self.settings_menu_index = (self.settings_menu_index - 1) % len(self.settings)
+                    elif event.key in (pygame.K_DOWN, pygame.K_s):
+                        self.settings_menu_index = (self.settings_menu_index + 1) % len(self.settings)
+                    elif event.key == pygame.K_LEFT:
+                        self.adjust_setting(-1)
+                    elif event.key == pygame.K_RIGHT:
+                        self.adjust_setting(1)
+                    elif event.key == pygame.K_RETURN:
+                        # Check if "Apply & Back" is selected
+                        if self.settings[self.settings_menu_index]["type"] == "action":
+                            self.apply_settings()
+                            self.state = config.MENU
+                            self.menu_index = 0
 
                 # ---------- PLAYING ----------
                 elif self.state == config.PLAYING:
@@ -208,12 +414,15 @@ class Game:
         # Update elapsed time
         self.elapsed_time += dt
         
+        # Calculate current difficulty multiplier
+        self.difficulty_multiplier = self.calculate_difficulty_multiplier()
+        
         # Update doctor
         self.doctor.update(dt)
 
-        # Update agents
+        # Update agents with difficulty scaling
         for a in self.agents:
-            a.update(dt)
+            a.update(dt, self.difficulty_multiplier)
             a.bounce_off_walls(config.WIDTH, config.HEIGHT)
 
         if config.ENABLE_AGENT_COLLISIONS:
@@ -290,6 +499,18 @@ class Game:
             pygame.display.flip()
             return
 
+        # ---------- SETTINGS ----------
+        if self.state == config.SETTINGS:
+            self.menu_option_rects = draw_settings_menu(
+                self.screen,
+                self.font_title,
+                self.font_ui,
+                self.settings,
+                self.settings_menu_index,
+            )
+            pygame.display.flip()
+            return
+
         # ---------- WORLD (PLAYING / PAUSED / WIN / LOSE) ----------
         for a in self.agents:
             a.draw(self.screen)
@@ -318,6 +539,7 @@ class Game:
                     self.doctor.reload_timer,
                     config.PELLET_RELOAD_TIME,
                     self.doctor.shot_cooldown_timer,
+                    self.difficulty_multiplier,
                 )
 
                 draw_infection_curve(

@@ -159,8 +159,8 @@ Deliverable: Basic audio feedback improves feel.
 ---
 
 ## 12) Difficulty tuning + balance (Week 6)
-- [ ] (★) Implement global difficulty scaling over time (speed multiplier/curve)
-- [ ] (★) Tune difficulty curve parameters (how fast it ramps up)
+- [x] (★) Implement global difficulty scaling over time (speed multiplier/curve)
+- [x] (★) Tune difficulty curve parameters (how fast it ramps up)
 - [ ] (★) Tune infection probability `p`
 - [ ] (★) Tune pellet cooldown/ammo
 - [ ] (★) Ensure loss condition is fair (not instant doom)
