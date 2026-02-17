@@ -23,6 +23,37 @@ class Game:
         self.font_title = pygame.font.Font(config.FONT_NAME, config.FONT_SIZE_TITLE)
         self.font_ui = pygame.font.Font(config.FONT_NAME, config.FONT_SIZE_UI)
 
+        # Load menu background image
+        import os
+        bg_path = os.path.join(os.path.dirname(__file__), "components", "menu_background.png")
+        orig_bg = pygame.image.load(bg_path).convert()
+        
+        # Calculate aspect scaling to cover the screen (crop instead of stretch)
+        bg_w, bg_h = orig_bg.get_size()
+        screen_w, screen_h = config.WIDTH, config.HEIGHT
+        
+        # Choose the larger scale factor to ensure the screen is fully covered
+        scale = max( screen_w / bg_w, screen_h / bg_h)
+        new_w = int(bg_w * scale)
+        new_h = int(bg_h * scale) 
+        
+        # Scale the image
+        scaled_bg = pygame.transform.smoothscale(orig_bg, (new_w, new_h))
+        
+        # Center-crop to screen dimensions
+        crop_x = (new_w - screen_w) // 2
+        crop_y = (new_h - screen_h) // 2
+        self.menu_background = scaled_bg.subsurface(pygame.Rect(crop_x, crop_y, screen_w, screen_h))
+
+        # Load logo image
+        logo_path = os.path.join(os.path.dirname(__file__), "components", "logo.png")
+        self.logo = pygame.image.load(logo_path).convert_alpha()
+        # Scale logo to a reasonable size (e.g., max 300px width)
+        logo_aspect = self.logo.get_width() / self.logo.get_height()
+        target_w = 300
+        target_h = int(target_w / logo_aspect)
+        self.logo = pygame.transform.smoothscale(self.logo, (target_w, target_h))
+
         # Spawn agents
         self.agents = spawn_agents()
 
@@ -491,10 +522,11 @@ class Game:
                 self.screen,
                 self.font_title,
                 self.font_ui,
-                "SPREAD",
+                self.logo,
                 self.main_menu_options,
                 self.menu_index,
                 subtitle="Up/Down Arrow Keys + Enter",
+                background=self.menu_background,
             )
             pygame.display.flip()
             return
@@ -507,6 +539,7 @@ class Game:
                 self.font_ui,
                 self.settings,
                 self.settings_menu_index,
+                background=self.menu_background,
             )
             pygame.display.flip()
             return
@@ -561,6 +594,7 @@ class Game:
                 self.pause_menu_options,
                 self.menu_index,
                 subtitle="Esc to resume",
+                background=self.menu_background,
             )
 
         elif self.state == config.WIN:
@@ -572,6 +606,7 @@ class Game:
                 self.end_menu_options,
                 self.menu_index,
                 subtitle="R = Restart, M = Menu, Q = Quit",
+                background=self.menu_background,
             )
 
         elif self.state == config.LOSE:
@@ -583,6 +618,7 @@ class Game:
                 self.end_menu_options,
                 self.menu_index,
                 subtitle="R = Restart, M = Menu, Q = Quit",
+                background=self.menu_background,
             )
 
         pygame.display.flip()

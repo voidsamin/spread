@@ -102,14 +102,18 @@ def draw_menu(
     options: list[str],
     selected_index: int,
     subtitle: str | None = None,
+    background: pygame.Surface | None = None,
 ) -> list[pygame.Rect]:
-    # Dim background overlay
-    overlay = pygame.Surface((config.WIDTH, config.HEIGHT), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 160))
-    surface.blit(overlay, (0, 0))
+    # Draw background image or dim overlay
+    if background is not None:
+        surface.blit(background, (0, 0))
+    else:
+        overlay = pygame.Surface((config.WIDTH, config.HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 160))
+        surface.blit(overlay, (0, 0))
 
     # Panel
-    panel_w, panel_h = 360, 240
+    panel_w, panel_h = 400, 260
     panel_x = (config.WIDTH - panel_w) // 2
     panel_y = (config.HEIGHT - panel_h) // 2
     panel_rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
@@ -117,20 +121,28 @@ def draw_menu(
     pygame.draw.rect(surface, (20, 20, 20), panel_rect, border_radius=12)
     pygame.draw.rect(surface, config.UI_COLOR, panel_rect, 2, border_radius=12)
 
-    # Title
-    title_surf = title_font.render(title, True, config.UI_COLOR)
-    title_rect = title_surf.get_rect(center=(config.WIDTH // 2, panel_y + 55))
+    # Title (Text or Surface)
+    if isinstance(title, pygame.Surface):
+        title_surf = title
+    else:
+        title_surf = title_font.render(title, True, config.UI_COLOR)
+        
+    # Position title near top of panel
+    title_rect = title_surf.get_rect(center=(config.WIDTH // 2, panel_y + 15 + title_surf.get_height() // 2))
     surface.blit(title_surf, title_rect)
 
     # Subtitle
     if subtitle:
         sub_surf = ui_font.render(subtitle, True, (180, 180, 180))
-        sub_rect = sub_surf.get_rect(center=(config.WIDTH // 2, panel_y + 95))
+        # Place subtitle below title
+        sub_rect = sub_surf.get_rect(center=(config.WIDTH // 2, title_rect.bottom + 15))
         surface.blit(sub_surf, sub_rect)
+        start_y = sub_rect.bottom + 20
+    else:
+        start_y = title_rect.bottom + 25
 
     # Options
     option_rects: list[pygame.Rect] = []
-    start_y = panel_y + 135
 
     for i, text in enumerate(options):
         is_sel = (i == selected_index)
@@ -158,12 +170,16 @@ def draw_settings_menu(
     ui_font: pygame.font.Font,
     settings: list[dict],
     selected_index: int,
+    background: pygame.Surface | None = None,
 ) -> list[pygame.Rect]:
     """Draw the settings menu with adjustable values."""
-    # Dim background overlay
-    overlay = pygame.Surface((config.WIDTH, config.HEIGHT), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 160))
-    surface.blit(overlay, (0, 0))
+    # Draw background image or dim overlay
+    if background is not None:
+        surface.blit(background, (0, 0))
+    else:
+        overlay = pygame.Surface((config.WIDTH, config.HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 160))
+        surface.blit(overlay, (0, 0))
 
     # Larger panel for settings
     panel_w, panel_h = 600, 500
