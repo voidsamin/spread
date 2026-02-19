@@ -66,7 +66,7 @@ LOSE = "LOSE"
 # Simulation parameters (Agents)
 # -----------------------------
 AGENT_COUNT = 150
-AGENT_RADIUS = 6
+AGENT_RADIUS = 14
 
 # Speeds are in pixels per second
 AGENT_SPEED_MIN = 40

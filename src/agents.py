@@ -59,11 +59,15 @@ class Agent:
             self.pos.y = height - self.radius
             self.vel.y *= -1
 
-    def draw(self, surface: pygame.Surface, virus_sprite: pygame.Surface | None = None) -> None:
+    def draw(self, surface: pygame.Surface, virus_sprite: pygame.Surface | None = None, healthy_sprite: pygame.Surface | None = None) -> None:
         if self.infected and virus_sprite:
             # Center the sprite on the agent's position
             rect = virus_sprite.get_rect(center=(int(self.pos.x), int(self.pos.y)))
             surface.blit(virus_sprite, rect)
+        elif (not self.infected) and healthy_sprite:
+            # Center the healthy sprite
+            rect = healthy_sprite.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+            surface.blit(healthy_sprite, rect)
         else:
             color = config.INFECTED_COLOR if self.infected else config.HEALTHY_COLOR
             pygame.draw.circle(surface, color, (int(self.pos.x), int(self.pos.y)), self.radius)

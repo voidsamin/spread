@@ -72,10 +72,18 @@ class Game:
         # Virus sprite for infected agents
         virus_path = os.path.join(os.path.dirname(__file__), "components", "virus.png")
         self.virus_sprite = pygame.image.load(virus_path).convert_alpha()
-        # Use a larger multiplier (e.g., 4x radius) to compensate for potential 
-        # transparent padding in the image, ensuring visual parity with healthy dots.
-        virus_size = config.AGENT_RADIUS * 4
+        # Use a larger multiplier (5.5x) for the virus to compensate for its spikes 
+        # and padding, ensuring it matches the visual mass of the healthy circle.
+        virus_size = int(config.AGENT_RADIUS * 5.5)
         self.virus_sprite = pygame.transform.smoothscale(self.virus_sprite, (virus_size, virus_size))
+
+        # Healthy agent sprite
+        healthy_path = os.path.join(os.path.dirname(__file__), "components", "healthy.png")
+        self.healthy_sprite = pygame.image.load(healthy_path).convert_alpha()
+        # Same multiplier for healthy sprite to maintain uniform size.
+        healthy_size = int(config.AGENT_RADIUS * 2.2)
+        self.healthy_sprite = pygame.transform.smoothscale(self.healthy_sprite, (healthy_size, healthy_size))
+        
 
         # Projectiles (vaccine pellets)
         self.projectiles: list[Projectile] = []
@@ -573,7 +581,7 @@ class Game:
 
         # ---------- WORLD (PLAYING / PAUSED / WIN / LOSE) ----------
         for a in self.agents:
-            a.draw(self.screen, self.virus_sprite)
+            a.draw(self.screen, self.virus_sprite, self.healthy_sprite)
 
         for p in self.projectiles:
             p.draw(self.screen)

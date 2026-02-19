@@ -5,7 +5,7 @@ All notable changes to this project will be documented here.
 ### Added
 - **Fast-Forward Mechanic**: Simulation can now be speeded up using keys **1** (1x), **2** (2x), and **3** (4x).
 - **Simulation Speed Display**: Added "Sim Speed" telemetry to the HUD to show the current time scale.
-- **Virus Sprite Rendering**: Infected agents are now rendered using a high-quality `virus.png` sprite instead of simple red circles.
+- **Virus & Healthy Circle Sprite Rendering**: Infected agents and healthy agents are now rendered using a high-quality `virus.png` sprite and `healthy.png` sprite instead of simple red and green circles.
 
 ### Changed
 - **Sprite Scaling Refinement**: Adjusted virus sprite dimensions (4x radius) to compensate for asset padding, ensuring visual parity with healthy dots.
