@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.27 — Fast-forward mode and Virus sprites
+### Added
+- **Fast-Forward Mechanic**: Simulation can now be speeded up using keys **1** (1x), **2** (2x), and **3** (4x).
+- **Simulation Speed Display**: Added "Sim Speed" telemetry to the HUD to show the current time scale.
+- **Virus Sprite Rendering**: Infected agents are now rendered using a high-quality `virus.png` sprite instead of simple red circles.
+
+### Changed
+- **Sprite Scaling Refinement**: Adjusted virus sprite dimensions (4x radius) to compensate for asset padding, ensuring visual parity with healthy dots.
+- **HUD Layout Updates**: Added new telemetry lines for simulation speed and difficulty.
+
+### Fixed / Notes
+- Time scaling correctly affects all aspects of the simulation, including infection spread rate and win/loss timers.
+
 ## v0.26 — Fullscreen mode and gameplay balance tuning
 ### Added
 - **Fullscreen Mode**: The game now launches in native resolution fullscreen by default.

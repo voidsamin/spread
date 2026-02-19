@@ -152,7 +152,7 @@ Deliverable: A playable loop from menu → play → end → restart.
 - [ ] (☆) Add pellet shoot sound
 - [ ] (☆) Add subtle background loop
 - [ ] (☆) Add hit/impact sound for collisions (careful: can get noisy)
-- [ ] (☆) Add simple sprites (optional; circles are fine for MVP)
+- [x] (☆) Add simple sprites (optional; circles are fine for MVP)
 
 Deliverable: Basic audio feedback improves feel.
 

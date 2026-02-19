@@ -69,6 +69,14 @@ class Game:
         # Doctor (player)
         self.doctor = Doctor()
 
+        # Virus sprite for infected agents
+        virus_path = os.path.join(os.path.dirname(__file__), "components", "virus.png")
+        self.virus_sprite = pygame.image.load(virus_path).convert_alpha()
+        # Use a larger multiplier (e.g., 4x radius) to compensate for potential 
+        # transparent padding in the image, ensuring visual parity with healthy dots.
+        virus_size = config.AGENT_RADIUS * 4
+        self.virus_sprite = pygame.transform.smoothscale(self.virus_sprite, (virus_size, virus_size))
+
         # Projectiles (vaccine pellets)
         self.projectiles: list[Projectile] = []
 
@@ -109,6 +117,9 @@ class Game:
 
         # Difficulty scaling
         self.difficulty_multiplier = config.DIFFICULTY_START_MULTIPLIER
+        
+        # Time scale (fast forward)
+        self.time_scale = config.TIME_SCALE_1
 
         # Settings menu
         self.settings_menu_index = 0
@@ -369,6 +380,12 @@ class Game:
                         self.menu_index = 0
                     elif event.key == pygame.K_F1:
                         self.show_hud = not self.show_hud
+                    elif event.key == pygame.K_1:
+                        self.time_scale = config.TIME_SCALE_1
+                    elif event.key == pygame.K_2:
+                        self.time_scale = config.TIME_SCALE_2
+                    elif event.key == pygame.K_3:
+                        self.time_scale = config.TIME_SCALE_3
 
                 # ---------- PAUSED ----------
                 elif self.state == config.PAUSED:
@@ -556,7 +573,7 @@ class Game:
 
         # ---------- WORLD (PLAYING / PAUSED / WIN / LOSE) ----------
         for a in self.agents:
-            a.draw(self.screen)
+            a.draw(self.screen, self.virus_sprite)
 
         for p in self.projectiles:
             p.draw(self.screen)
@@ -583,6 +600,7 @@ class Game:
                     config.PELLET_RELOAD_TIME,
                     self.doctor.shot_cooldown_timer,
                     self.difficulty_multiplier,
+                    self.time_scale,
                 )
 
                 draw_infection_curve(
@@ -637,7 +655,7 @@ class Game:
         while self.running:
             dt = self.clock.tick(config.FPS) / 1000.0
             self.handle_events()
-            self.update(dt)
+            self.update(dt * self.time_scale)
             self.draw()
 
         pygame.quit()

@@ -17,6 +17,9 @@ TITLE = "SPREAD"
 # WIDTH and HEIGHT are updated at runtime to native resolution (FULLSCREEN)
 WIDTH, HEIGHT = 800, 600
 FPS = 60
+TIME_SCALE_1 = 1.0
+TIME_SCALE_2 = 2.0
+TIME_SCALE_3 = 4.0
 
 # Fixed timestep is optional; for now we use dt from clock.tick()
 # If later we want deterministic physics, add FIXED_DT = 1/60.

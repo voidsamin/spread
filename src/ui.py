@@ -30,6 +30,7 @@ def draw_hud(
     reload_time: float,
     shot_cd: float,
     difficulty_multiplier: float = 1.0,
+    time_scale: float = 1.0,
 ) -> None:
     # Build lines
     lines = [
@@ -39,6 +40,7 @@ def draw_hud(
         f"Infected %: {ratio*100:.1f}%",
         f">50% timer: {t_above:.1f}s",
         f"Pellets: {ammo}/{ammo_max}",
+        f"Sim Speed: {time_scale:.0f}x",
     ]
 
     # Show difficulty multiplier if enabled
