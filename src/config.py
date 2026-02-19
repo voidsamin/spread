@@ -14,6 +14,7 @@ from __future__ import annotations
 # Window / timing
 # -----------------------------
 TITLE = "SPREAD"
+# WIDTH and HEIGHT are updated at runtime to native resolution (FULLSCREEN)
 WIDTH, HEIGHT = 800, 600
 FPS = 60
 
@@ -87,7 +88,7 @@ SPAWN_PADDING = 1  # extra pixels of spacing between circles
 
 # Infection model (state + colors)
 INITIAL_INFECTED = 3
-INFECTION_PROBABILITY = 0.25  # p in the proposal
+INFECTION_PROBABILITY = 0.18  # p in the proposal
 
 # Lose condition (proposal: > 50% infected for > 2 minutes)
 LOSE_THRESHOLD_RATIO = 0.50
@@ -96,6 +97,7 @@ LOSE_THRESHOLD_SECONDS = 120.0
 # Win condition
 WIN_THRESHOLD_RATIO = 0.10      # win if infected ratio stays below 10%
 WIN_THRESHOLD_SECONDS = 30.0    # for this many seconds
+WIN_CHECK_WARMUP = 10.0         # seconds to wait before checking win condition
 
 # Doctor mechanics (placeholder; later)
 CURE_RADIUS = 24
@@ -113,8 +115,8 @@ PELLET_RADIUS = 4           # pixels
 PELLET_LIFETIME = 1.2       # seconds before despawn
 
 PELLET_COOLDOWN = 0.15      # seconds between shots
-PELLET_AMMO_MAX = 12        # max ammo
-PELLET_RELOAD_TIME = 2.5    # seconds to reload back to full (simple reload)
+PELLET_AMMO_MAX = 16        # max ammo
+PELLET_RELOAD_TIME = 2.0    # seconds to reload back to full (simple reload)
 
 
 

@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.26 — Fullscreen mode and gameplay balance tuning
+### Added
+- **Fullscreen Mode**: The game now launches in native resolution fullscreen by default.
+- **Dynamic Resolution Tracking**: `config.WIDTH` and `config.HEIGHT` are updated automatically at runtime to match the display.
+- **Win-condition Warmup**: Added a 10-second "warmup" period before the win condition can trigger, preventing instant wins at game start.
+- **Dynamic UI Scaling**: HUD elements and the Infection Curve graph now reposition themselves relative to the screen edges regardless of resolution.
+
+### Changed
+- **Balanced Infection Spread**: Reduced `INFECTION_PROBABILITY` from 0.25 to 0.18 to prevent rapid "instant doom" scenarios.
+- **Pellet Buffs**: Increased maximum ammo tray size to 16 and reduced reload time to 2.0s for better player agency.
+- **Menu Background Handling**: Implemented aspect-correct cropping for the menu background image to cover any screen size without distortion.
+
+### Fixed / Notes
+- Verified that all physics and boundaries scale correctly with fullscreen dimensions.
+
 ## v0.25 — Global difficulty scaling + in-game settings menu
 ### Added
 - **Global difficulty scaling system**: Agent speed now increases over time based on a configurable curve.

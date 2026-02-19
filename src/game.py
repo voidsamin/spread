@@ -16,7 +16,16 @@ class Game:
     def __init__(self) -> None:
         pygame.init()
         pygame.display.set_caption(config.TITLE)
-        self.screen = pygame.display.set_mode((config.WIDTH, config.HEIGHT))
+        
+        # Use native resolution and fullscreen
+        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        
+        # Update config dimensions with actual screen size
+        config.WIDTH, config.HEIGHT = self.screen.get_size()
+        
+        # Reposition graph relative to top-right
+        graph_w, graph_h = 250, 90
+        config.GRAPH_RECT = (config.WIDTH - graph_w - 10, 10, graph_w, graph_h)
 
         self.clock = pygame.time.Clock()
 
@@ -504,7 +513,8 @@ class Game:
             self.menu_index = 0
 
         # ---- WIN condition tracking ----
-        if self.infected_ratio < config.WIN_THRESHOLD_RATIO:
+        # Added warmup period to prevent instant-win at game start
+        if self.infected_ratio < config.WIN_THRESHOLD_RATIO and self.elapsed_time > config.WIN_CHECK_WARMUP:
             self.time_below_win_threshold += dt
         else:
             self.time_below_win_threshold = 0.0

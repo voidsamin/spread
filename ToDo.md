@@ -141,7 +141,7 @@ Deliverable: The player understands the system state at all times.
 - [x] (★) End screens: Win / Lose + restart
 - [x] (★) Pause menu (Esc)
 - [x] (★) Restart game from WIN / LOSE state
-- [ ] (☆) Settings screen (agent count, infection probability p, speed)
+- [x] (☆) Settings screen (agent count, infection probability p, speed)
 
 Deliverable: A playable loop from menu → play → end → restart.
 
@@ -161,10 +161,10 @@ Deliverable: Basic audio feedback improves feel.
 ## 12) Difficulty tuning + balance (Week 6)
 - [x] (★) Implement global difficulty scaling over time (speed multiplier/curve)
 - [x] (★) Tune difficulty curve parameters (how fast it ramps up)
-- [ ] (★) Tune infection probability `p`
-- [ ] (★) Tune pellet cooldown/ammo
-- [ ] (★) Ensure loss condition is fair (not instant doom)
-- [ ] (★) Prevent instant-win at game start (e.g., win-check warmup)
+- [x] (★) Tune infection probability `p`
+- [x] (★) Tune pellet cooldown/ammo
+- [x] (★) Ensure loss condition is fair (not instant doom)
+- [x] (★) Prevent instant-win at game start (e.g., win-check warmup)
 - [ ] (☆) Add infection re-seeding when infected count reaches zero (difficulty-dependent)
 - [ ] (☆) Add difficulty levels (Easy/Normal/Hard)
 
