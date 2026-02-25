@@ -172,7 +172,7 @@ Deliverable: “Containment” is challenging but possible.
 
 ---
 
-## 13) Simulation Extensions (Teacher Feedback — Make It More “Simulation”)
+## 13) Simulation Extensions
 
 - [ ] (★) Multiple virus strains
   - [ ] Different infection probabilities per strain
