@@ -172,7 +172,34 @@ Deliverable: “Containment” is challenging but possible.
 
 ---
 
-## 13) Performance + polish (Week 6)
+## 13) Simulation Extensions (Teacher Feedback — Make It More “Simulation”)
+
+- [ ] (★) Multiple virus strains
+  - [ ] Different infection probabilities per strain
+  - [ ] Different colors per strain
+  - [ ] Optional: different incubation/recovery behaviors per strain
+  - [ ] Track per-strain infection statistics
+
+- [ ] (★) Statistical modeling features
+  - [ ] Support different infection probability models:
+    - [ ] Uniform probability (current)
+    - [ ] Gaussian / Normal distribution
+    - [ ] Exponential distribution
+  - [ ] Compare spread dynamics between distributions
+
+- [ ] (★) Advanced graphing / analytics
+  - [ ] Per-strain infection curves
+  - [ ] Overlay multiple curves on the same graph
+  - [ ] Histogram of infection durations (optional)
+  - [ ] Display reproduction number (R₀ approximation)
+
+- [ ] (☆) Simulation mode toggle (Game Mode vs Simulation Mode)
+
+Deliverable: The project demonstrates clear computational modeling and statistical simulation concepts beyond arcade mechanics.
+
+---
+
+## 14) Performance + polish (Week 6)
 - [ ] (★) Profile with high agent counts (e.g., 500, 1000)
 - [ ] (★) Add spatial hashing/grid if collisions become slow
 - [ ] (☆) Add screen shake or subtle FX
@@ -183,7 +210,7 @@ Deliverable: Smooth performance and stable gameplay.
 
 ---
 
-## 14) Documentation + final submission
+## 15) Documentation + final submission
 - [ ] (★) Update README with:
   - [ ] How to run
   - [ ] Controls
