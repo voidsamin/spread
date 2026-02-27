@@ -174,22 +174,22 @@ Deliverable: “Containment” is challenging but possible.
 
 ## 13) Simulation Extensions
 
-- [ ] (★) Multiple virus strains
-  - [ ] Different infection probabilities per strain
-  - [ ] Different colors per strain
-  - [ ] Optional: different incubation/recovery behaviors per strain
-  - [ ] Track per-strain infection statistics
+- [x] (★) Multiple virus strains
+  - [x] Different infection probabilities per strain
+  - [x] Different colors per strain
+  - [x] Optional: different incubation/recovery behaviors per strain
+  - [x] Track per-strain infection statistics
 
-- [ ] (★) Statistical modeling features
-  - [ ] Support different infection probability models:
-    - [ ] Uniform probability (current)
-    - [ ] Gaussian / Normal distribution
-    - [ ] Exponential distribution
-  - [ ] Compare spread dynamics between distributions
+- [x] (★) Statistical modeling features
+  - [x] Support different infection probability models:
+    - [x] Uniform probability (current)
+    - [x] Gaussian / Normal distribution
+    - [x] Exponential distribution
+  - [x] Compare spread dynamics between distributions
 
-- [ ] (★) Advanced graphing / analytics
-  - [ ] Per-strain infection curves
-  - [ ] Overlay multiple curves on the same graph
+- [x] (★) Advanced graphing / analytics
+  - [x] Per-strain infection curves
+  - [x] Overlay multiple curves on the same graph
   - [ ] Histogram of infection durations (optional)
   - [ ] Display reproduction number (R₀ approximation)
 

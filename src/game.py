@@ -71,11 +71,22 @@ class Game:
 
         # Virus sprite for infected agents
         virus_path = os.path.join(os.path.dirname(__file__), "components", "virus.png")
-        self.virus_sprite = pygame.image.load(virus_path).convert_alpha()
-        # Use a larger multiplier (5.5x) for the virus to compensate for its spikes 
-        # and padding, ensuring it matches the visual mass of the healthy circle.
-        virus_size = int(config.AGENT_RADIUS * 5.5)
-        self.virus_sprite = pygame.transform.smoothscale(self.virus_sprite, (virus_size, virus_size))
+        orig_virus = pygame.image.load(virus_path).convert_alpha()
+        # Adjusted scaling to match healthy agents (2.2x multiplier)
+        virus_size = int(config.AGENT_RADIUS * 2.2)
+        self.virus_sprite = pygame.transform.smoothscale(orig_virus, (virus_size, virus_size))
+
+        # Create strain-specific tinted versions of the virus sprite
+        self.strain_sprites = {}
+        for sid, s_info in config.STRAINS.items():
+            # Create a tinted version
+            tinted = self.virus_sprite.copy()
+            # We use a mix of color and multiplicative blending to ensure the color is prominent
+            # but preserve some of the sprite's texture/detail.
+            color_surf = pygame.Surface((virus_size, virus_size), pygame.SRCALPHA)
+            color_surf.fill(s_info["color"])
+            tinted.blit(color_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+            self.strain_sprites[sid] = tinted
 
         # Healthy agent sprite
         healthy_path = os.path.join(os.path.dirname(__file__), "components", "healthy.png")
@@ -93,6 +104,7 @@ class Game:
         self.infected_count = 0
         self.healthy_count = 0
         self.infected_ratio = 0.0
+        self.strain_counts = {sid: 0 for sid in config.STRAINS}
 
         # Lose-condition timer tracking
         self.time_above_threshold = 0.0
@@ -121,7 +133,9 @@ class Game:
         # Infection ratio history (for curve overlay)
         self.history_timer = 0.0
         maxlen = int(config.HISTORY_SECONDS / config.HISTORY_SAMPLE_DT) + 1
+        # Track history for each strain and total
         self.ratio_history = deque(maxlen=maxlen)
+        self.strain_histories = {sid: deque(maxlen=maxlen) for sid in config.STRAINS}
 
         # Difficulty scaling
         self.difficulty_multiplier = config.DIFFICULTY_START_MULTIPLIER
@@ -200,6 +214,13 @@ class Game:
                 "step": 1,
             },
             {
+                "name": "Infection Model",
+                "key": "infection_model",
+                "type": "enum",
+                "value": config.INFECTION_MODEL,
+                "options": ["uniform", "gaussian", "exponential"],
+            },
+            {
                 "name": "Apply & Back",
                 "key": "_apply",
                 "type": "action",
@@ -217,6 +238,7 @@ class Game:
         self.infected_count = 0
         self.healthy_count = 0
         self.infected_ratio = 0.0
+        self.strain_counts = {sid: 0 for sid in config.STRAINS}
         self.time_above_threshold = 0.0
         self.time_below_win_threshold = 0.0
 
@@ -224,7 +246,9 @@ class Game:
         self.elapsed_time = 0.0
         self.history_timer = 0.0
         self.ratio_history.clear()
-
+        for h in self.strain_histories.values():
+            h.clear()
+        
         # Reset doctor gameplay state (ammo/cooldowns)
         self.doctor.cooldown_timer = 0.0
         self.doctor.shot_cooldown_timer = 0.0
@@ -299,6 +323,8 @@ class Game:
                 config.INFECTION_PROBABILITY = value
             elif key == "initial_infected":
                 config.INITIAL_INFECTED = value
+            elif key == "infection_model":
+                config.INFECTION_MODEL = value
 
     def adjust_setting(self, delta: int) -> None:
         """Adjust the currently selected setting by delta (-1 for left, +1 for right)."""
@@ -503,11 +529,11 @@ class Game:
         for p in self.projectiles:
             hit = False
             for a in self.agents:
-                if not a.infected:
+                if a.strain_id is None:
                     continue
                 # circle-circle collision: agent radius + projectile radius
                 if (a.pos - p.pos).length_squared() <= (a.radius + p.radius) ** 2:
-                    a.infected = False
+                    a.strain_id = None
                     hit = True
                     break
             if (not hit) and (not p.is_dead()):
@@ -517,7 +543,12 @@ class Game:
 
 
         # ---- Stats tracking (every frame) ----
-        self.infected_count = sum(1 for a in self.agents if a.infected)
+        self.strain_counts = {sid: 0 for sid in config.STRAINS}
+        for a in self.agents:
+            if a.strain_id is not None:
+                self.strain_counts[a.strain_id] += 1
+        
+        self.infected_count = sum(self.strain_counts.values())
         self.healthy_count = len(self.agents) - self.infected_count
         self.infected_ratio = self.infected_count / max(1, len(self.agents))
 
@@ -526,6 +557,9 @@ class Game:
         if self.history_timer >= config.HISTORY_SAMPLE_DT:
             self.history_timer = 0.0
             self.ratio_history.append(self.infected_ratio)
+            for sid in config.STRAINS:
+                ratio = self.strain_counts[sid] / max(1, len(self.agents))
+                self.strain_histories[sid].append(ratio)
 
         # ---- LOSE condition tracking ----
         if self.infected_ratio > config.LOSE_THRESHOLD_RATIO:
@@ -581,7 +615,7 @@ class Game:
 
         # ---------- WORLD (PLAYING / PAUSED / WIN / LOSE) ----------
         for a in self.agents:
-            a.draw(self.screen, self.virus_sprite, self.healthy_sprite)
+            a.draw(self.screen, self.strain_sprites, self.healthy_sprite)
 
         for p in self.projectiles:
             p.draw(self.screen)
@@ -609,12 +643,14 @@ class Game:
                     self.doctor.shot_cooldown_timer,
                     self.difficulty_multiplier,
                     self.time_scale,
+                    strain_counts=self.strain_counts,
                 )
 
                 draw_infection_curve(
                     self.screen,
                     list(self.ratio_history),
                     config.GRAPH_RECT,
+                    strain_histories={sid: list(h) for sid, h in self.strain_histories.items()}
                 )
 
             if config.SHOW_FPS:

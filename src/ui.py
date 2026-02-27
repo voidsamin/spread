@@ -31,17 +31,26 @@ def draw_hud(
     shot_cd: float,
     difficulty_multiplier: float = 1.0,
     time_scale: float = 1.0,
+    strain_counts: dict[int, int] | None = None,
 ) -> None:
     # Build lines
     lines = [
         f"Time: {format_time(elapsed)}",
         f"Infected: {infected}",
+    ]
+    
+    if strain_counts:
+        for sid, count in strain_counts.items():
+            name = config.STRAINS[sid]["name"]
+            lines.append(f"  - {name}: {count}")
+
+    lines.extend([
         f"Healthy:  {healthy}",
         f"Infected %: {ratio*100:.1f}%",
         f">50% timer: {t_above:.1f}s",
         f"Pellets: {ammo}/{ammo_max}",
         f"Sim Speed: {time_scale:.0f}x",
-    ]
+    ])
 
     # Show difficulty multiplier if enabled
     if config.DIFFICULTY_ENABLED:
@@ -66,8 +75,9 @@ def draw_infection_curve(
     surface: pygame.Surface,
     ratios: list[float],
     rect: tuple[int, int, int, int],
+    strain_histories: dict[int, list[float]] | None = None,
 ) -> None:
-    if not ratios:
+    if not ratios and not strain_histories:
         return
 
     x, y, w, h = rect
@@ -75,20 +85,30 @@ def draw_infection_curve(
     # Outline box
     pygame.draw.rect(surface, config.UI_COLOR, pygame.Rect(x, y, w, h), 1)
 
-    # Convert ratios (0..1) to points
-    n = len(ratios)
-    if n < 2:
-        return
+    # Helper to convert ratio list to points
+    def ratios_to_pts(r_list: list[float]):
+        n = len(r_list)
+        if n < 2: return []
+        pts = []
+        for i, r in enumerate(r_list):
+            r = max(0.0, min(1.0, r))
+            px = x + int((i / (n - 1)) * (w - 2)) + 1
+            py = y + int((1.0 - r) * (h - 2)) + 1
+            pts.append((px, py))
+        return pts
 
-    pts = []
-    for i, r in enumerate(ratios):
-        r = max(0.0, min(1.0, r))
-        px = x + int((i / (n - 1)) * (w - 2)) + 1
-        py = y + int((1.0 - r) * (h - 2)) + 1
-        pts.append((px, py))
+    # Draw per-strain curves first (thinner)
+    if strain_histories:
+        for sid, h_list in strain_histories.items():
+            pts = ratios_to_pts(h_list)
+            if pts:
+                color = config.STRAINS[sid]["color"]
+                pygame.draw.lines(surface, color, False, pts, 1)
 
-    # Draw curve
-    pygame.draw.lines(surface, config.INFECTED_COLOR, False, pts, 2)
+    # Draw total curve (thicker, white/default)
+    pts = ratios_to_pts(ratios)
+    if pts:
+        pygame.draw.lines(surface, config.UI_COLOR, False, pts, 2)
 
 
 def draw_center_message(surface: pygame.Surface, font: pygame.font.Font, text: str, color) -> None:

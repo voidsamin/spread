@@ -1,6 +1,32 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.29 — Statistical Infection Models
+### Added
+- **Statistical Infection Models**: Added support for three infection probability models:
+  - **Uniform**: Every agent has the same susceptibility (1.0).
+  - **Gaussian (Normal)**: Agent susceptibility follows a Normal distribution.
+  - **Exponential**: Agent susceptibility follows an Exponential distribution (vulnerable clusters).
+- **Runtime Model Selection**: Players can switch between infection models in the settings menu.
+- **Susceptibility Mechanics**: Contact infection probability is now weighted by the individual agent's susceptibility.
+
+### Changed
+- **Virus Sprite Scaling**: Reduced virus sprite size (2.2x multiplier) to match visual parity with healthy agents and the Doctor's hitboxes.
+- **Settings Menu**: Expanded with an "Infection Model" option.
+
+## v0.28 — Multiple Virus Strains
+### Added
+- **Multi-Strain System**: Support for multiple virus strains (Alpha, Beta, Gamma) with unique properties.
+- **Per-Strain Infection Probabilities**: Strains can spread at different rates (e.g., Alpha: 18%, Beta: 12%, Gamma: 25%).
+- **Visual Distinction**: Each strain has a unique color (Red, Orange, Purple) displayed as a glow/ring under the virus sprite.
+- **Strain Telemetry**: HUD now tracks and displays the count of agents infected with each specific strain.
+- **Advanced Infection Graph**: The infection curve graph now displays multiple lines—one for each strain (colored) and a thicker white line for total infection percentage.
+
+### Changed
+- **Agent Data Model**: Updated `Agent` state from a boolean `infected` flag to a nullable `strain_id`.
+- **Infection Logic**: Contact-based infection now transfers the specific strain of the donor to the recipient.
+- **Spawning Logic**: Agents are now initialized with multiple patient-zeros across different strains based on configuration.
+
 ## v0.27 — Fast-forward mode and Virus sprites
 ### Added
 - **Fast-Forward Mechanic**: Simulation can now be speeded up using keys **1** (1x), **2** (2x), and **3** (4x).

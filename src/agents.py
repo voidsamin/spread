@@ -13,12 +13,14 @@ def _clamp_speed(v: pygame.Vector2, max_speed: float) -> pygame.Vector2:
         v.scale_to_length(max_speed)
     return v
 
+
 @dataclass
 class Agent:
     pos: pygame.Vector2
     vel: pygame.Vector2
     radius: int
-    infected: bool = False  # state: healthy(False) / infected(True)
+    strain_id: int | None = None  # None = healthy, int = specific strain ID
+    susceptibility: float = 1.0   # How easily this agent gets infected
 
     def update(self, dt: float, difficulty_multiplier: float = 1.0) -> None:
         # Stochastic "wander": small random acceleration that changes velocity gradually
@@ -59,17 +61,32 @@ class Agent:
             self.pos.y = height - self.radius
             self.vel.y *= -1
 
-    def draw(self, surface: pygame.Surface, virus_sprite: pygame.Surface | None = None, healthy_sprite: pygame.Surface | None = None) -> None:
-        if self.infected and virus_sprite:
-            # Center the sprite on the agent's position
-            rect = virus_sprite.get_rect(center=(int(self.pos.x), int(self.pos.y)))
-            surface.blit(virus_sprite, rect)
-        elif (not self.infected) and healthy_sprite:
+    def draw(self, surface: pygame.Surface, virus_sprites: dict[int, pygame.Surface] | None = None, healthy_sprite: pygame.Surface | None = None) -> None:
+        if self.strain_id is not None and virus_sprites:
+            # Use the specific sprite for this strain
+            sprite = virus_sprites.get(self.strain_id)
+            if sprite:
+                rect = sprite.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+                
+                # Draw a smaller 'glow' circle under the sprite
+                color = config.STRAINS[self.strain_id]["color"]
+                glow_radius = int(self.radius * 1.6) 
+                pygame.draw.circle(surface, color, (int(self.pos.x), int(self.pos.y)), glow_radius)
+                
+                surface.blit(sprite, rect)
+            else:
+                # Fallback if no sprite for this strain
+                color = config.STRAINS[self.strain_id]["color"]
+                pygame.draw.circle(surface, color, (int(self.pos.x), int(self.pos.y)), self.radius)
+        elif self.strain_id is None and healthy_sprite:
             # Center the healthy sprite
             rect = healthy_sprite.get_rect(center=(int(self.pos.x), int(self.pos.y)))
             surface.blit(healthy_sprite, rect)
         else:
-            color = config.INFECTED_COLOR if self.infected else config.HEALTHY_COLOR
+            if self.strain_id is not None:
+                color = config.STRAINS[self.strain_id]["color"]
+            else:
+                color = config.HEALTHY_COLOR
             pygame.draw.circle(surface, color, (int(self.pos.x), int(self.pos.y)), self.radius)
 
 
@@ -93,6 +110,17 @@ def spawn_agents() -> list[Agent]:
 
     for _ in range(config.AGENT_COUNT):
         placed = False
+        
+        # Calculate susceptibility based on selected model
+        model = getattr(config, "INFECTION_MODEL", "uniform")
+        if model == "gaussian":
+            susc = random.gauss(1.0, config.GAUSSIAN_SIGMA)
+            susc = max(0.1, susc) # Clamp to positive
+        elif model == "exponential":
+            susc = random.expovariate(1.0 / config.EXPONENTIAL_SCALE)
+            susc = max(0.1, susc)
+        else: # uniform or default
+            susc = 1.0
 
         for _attempt in range(config.SPAWN_MAX_ATTEMPTS):
             pos = pygame.Vector2(
@@ -100,7 +128,7 @@ def spawn_agents() -> list[Agent]:
                 random.uniform(r, config.HEIGHT - r),
             )
             if not _is_overlapping(pos, r, agents):
-                agents.append(Agent(pos=pos, vel=_random_velocity(), radius=r))
+                agents.append(Agent(pos=pos, vel=_random_velocity(), radius=r, susceptibility=susc))
                 placed = True
                 break
 
@@ -110,29 +138,36 @@ def spawn_agents() -> list[Agent]:
                 random.uniform(r, config.WIDTH - r),
                 random.uniform(r, config.HEIGHT - r),
             )
-            agents.append(Agent(pos=pos, vel=_random_velocity(), radius=r))
+            agents.append(Agent(pos=pos, vel=_random_velocity(), radius=r, susceptibility=susc))
 
-    # Patient-zero (random initial infected)
-    infected_count = min(config.INITIAL_INFECTED, len(agents))
-    for a in random.sample(agents, infected_count):
-        a.infected = True
+    # Initial infected per strain
+    for strain_id, s_config in config.STRAINS.items():
+        count = min(s_config.get("initial_infected", 1), len(agents))
+        # Get agents that are currently healthy
+        healthy_agents = [a for a in agents if a.strain_id is None]
+        if not healthy_agents:
+            break
+        for a in random.sample(healthy_agents, min(count, len(healthy_agents))):
+            a.strain_id = strain_id
 
     return agents
 
 def try_spread_infection(a: Agent, b: Agent) -> None:
     """
     If one agent is infected and the other is not,
-    infect the healthy one with probability INFECTION_PROBABILITY.
+    infect the healthy one with the specific strain.
     """
-    p = config.INFECTION_PROBABILITY
-
     # One infected, one healthy
-    if a.infected and (not b.infected):
-        if random.random() < p:
-            b.infected = True
-    elif b.infected and (not a.infected):
-        if random.random() < p:
-            a.infected = True
+    if a.strain_id is not None and b.strain_id is None:
+        p = config.STRAINS[a.strain_id]["infection_probability"]
+        # Multiply by target agent's susceptibility
+        if random.random() < p * b.susceptibility:
+            b.strain_id = a.strain_id
+    elif b.strain_id is not None and a.strain_id is None:
+        p = config.STRAINS[b.strain_id]["infection_probability"]
+        # Multiply by target agent's susceptibility
+        if random.random() < p * a.susceptibility:
+            a.strain_id = b.strain_id
 
 
 def resolve_agent_collisions(agents: list[Agent]) -> None:

@@ -32,9 +32,38 @@ BG_COLOR = (30, 30, 30)
 WHITE = (255, 255, 255)
 
 # Agent colors (placeholder; we’ll formalize states later)
+# Agent colors
 HEALTHY_COLOR = (80, 200, 120)
-INFECTED_COLOR = (230, 80, 80)
+# RECOVERED_COLOR is kept for possible future use
 RECOVERED_COLOR = (80, 160, 230)
+
+# -----------------------------
+# Virus Strains
+# -----------------------------
+# Each strain has a unique color and infection probability.
+STRAINS = {
+    0: {
+        "name": "Alpha",
+        "color": (255, 82, 82),  # Vibrant Red
+        "infection_probability": 0.18,
+        "initial_infected": 2,
+    },
+    1: {
+        "name": "Beta",
+        "color": (0, 210, 255),  # Electric Cyan
+        "infection_probability": 0.12,
+        "initial_infected": 1,
+    },
+    2: {
+        "name": "Gamma",
+        "color": (156, 39, 176), # Vivid Purple
+        "infection_probability": 0.25,
+        "initial_infected": 1,
+    }
+}
+
+# The default infected color (legacy/fallback)
+INFECTED_COLOR = STRAINS[0]["color"]
 
 # Doctor / UI
 DOCTOR_COLOR = (80, 160, 230)
@@ -45,8 +74,8 @@ UI_COLOR = (235, 235, 235)
 # UI / fonts
 # -----------------------------
 FONT_NAME = None  # None = default pygame font
-FONT_SIZE_TITLE = 48
-FONT_SIZE_UI = 20
+FONT_SIZE_TITLE = 54
+FONT_SIZE_UI = 24
 SHOW_FPS = True  # toggle debug fps overlay
 
 
@@ -92,6 +121,12 @@ SPAWN_PADDING = 1  # extra pixels of spacing between circles
 # Infection model (state + colors)
 INITIAL_INFECTED = 3
 INFECTION_PROBABILITY = 0.18  # p in the proposal
+
+# Statistical Infection Models
+# Options: "uniform", "gaussian", "exponential"
+INFECTION_MODEL = "uniform"
+GAUSSIAN_SIGMA = 0.3      # For "gaussian" model
+EXPONENTIAL_SCALE = 1.0  # For "exponential" model
 
 # Lose condition (proposal: > 50% infected for > 2 minutes)
 LOSE_THRESHOLD_RATIO = 0.50

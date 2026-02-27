@@ -74,7 +74,7 @@ class Doctor:
         best_d2 = float("inf")
 
         for a in agents:
-            if not a.infected:
+            if a.strain_id is None:
                 continue
             d2 = (a.pos - self.pos).length_squared()
             if d2 <= radius_sq and d2 < best_d2:
@@ -85,7 +85,7 @@ class Doctor:
             return False
 
         # Cure
-        nearest.infected = False
+        nearest.strain_id = None
 
         # Start cooldown
         self.cooldown_timer = config.CURE_COOLDOWN
