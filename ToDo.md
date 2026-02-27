@@ -130,7 +130,7 @@ Deliverable: Ranged curing works and feels responsive.
   - [x] Keep a time series buffer (e.g., last 120s)
   - [x] Draw as a line graph in a corner
 - [x] (☆) Toggle debug UI (F1)
-- [ ] (☆) Polish HUD layout and visual grouping
+- [x] (☆) Polish HUD layout and visual grouping (Enhanced via Pause Overlay)
 
 Deliverable: The player understands the system state at all times.
 
@@ -141,7 +141,7 @@ Deliverable: The player understands the system state at all times.
 - [x] (★) End screens: Win / Lose + restart
 - [x] (★) Pause menu (Esc)
 - [x] (★) Restart game from WIN / LOSE state
-- [x] (☆) Settings screen (agent count, infection probability p, speed)
+- [x] (☆) Settings screen (agent count, infection probability p, speed, models)
 
 Deliverable: A playable loop from menu → play → end → restart.
 

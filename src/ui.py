@@ -116,6 +116,129 @@ def draw_center_message(surface: pygame.Surface, font: pygame.font.Font, text: s
     rect = surf.get_rect(center=(config.WIDTH // 2, config.HEIGHT // 2))
     surface.blit(surf, rect)
 
+
+def draw_pause_overlay(
+    surface: pygame.Surface,
+    title_font: pygame.font.Font,
+    ui_font: pygame.font.Font,
+    stats: dict,
+    ratios: list[float],
+    strain_histories: dict[int, list[float]],
+    options: list[str],
+    selected_index: int,
+) -> list[pygame.Rect]:
+    """Draw a modern, clean pause overlay with stats, graphs, and insights."""
+    # 1. Dim/Blur effect (provided by the background surface passed in Game.draw)
+    # We still want to add a semi-transparent dark overlay for readability
+    overlay = pygame.Surface((config.WIDTH, config.HEIGHT), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 180))
+    surface.blit(overlay, (0, 0))
+
+    # 2. Main Panel
+    panel_w, panel_h = config.WIDTH * 0.8, config.HEIGHT * 0.8
+    panel_x = (config.WIDTH - panel_w) // 2
+    panel_y = (config.HEIGHT - panel_h) // 2
+    panel_rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
+
+    pygame.draw.rect(surface, (15, 15, 15, 230), panel_rect, border_radius=20)
+    pygame.draw.rect(surface, config.UI_COLOR, panel_rect, 2, border_radius=20)
+
+    # 3. Title
+    title_surf = title_font.render("SYSTEM PAUSED", True, config.UI_COLOR)
+    title_rect = title_surf.get_rect(center=(config.WIDTH // 2, panel_y + 50))
+    surface.blit(title_surf, title_rect)
+
+    # --- Split into sections ---
+    # Left: Stats, Right: Graph, Bottom: Insight
+    margin = 40
+    content_y = title_rect.bottom + 40
+    col_w = (panel_w - margin * 3) // 2
+
+    # A. Statistics Column (Left)
+    stats_y = content_y
+    stats_list = [
+        ("Time Elapsed", stats["elapsed"]),
+        ("Healthy Remaining", f"{stats['healthy']}"),
+        ("Infected Agents", f"{stats['infected']}"),
+        ("Infection Ratio", f"{stats['ratio']*100:.1f}%"),
+        ("Current Speed", f"{stats['multiplier']:.2f}x"),
+    ]
+
+    for label, val in stats_list:
+        l_surf = ui_font.render(label, True, (180, 180, 180))
+        surface.blit(l_surf, (panel_x + margin, stats_y))
+        v_surf = ui_font.render(val, True, config.WHITE)
+        surface.blit(v_surf, (panel_x + margin + col_w - v_surf.get_width(), stats_y))
+        stats_y += 35
+
+    # B. Graph Column (Right)
+    graph_rect = (panel_x + panel_w - margin - col_w, content_y, col_w, 200)
+    draw_infection_curve(surface, ratios, graph_rect, strain_histories)
+    # Graph label
+    g_label = ui_font.render("Infection Trend", True, (180, 180, 180))
+    surface.blit(g_label, (graph_rect[0], graph_rect[1] - 25))
+
+    # B2. Strain Legend (Below Graph)
+    legend_y = graph_rect[1] + graph_rect[3] + 15
+    legend_x = graph_rect[0]
+    for sid, s_info in config.STRAINS.items():
+        # Color indicator circle
+        pygame.draw.circle(surface, s_info["color"], (legend_x + 8, legend_y + 10), 6)
+        # Strain name
+        l_text = ui_font.render(s_info["name"], True, (200, 200, 200))
+        surface.blit(l_text, (legend_x + 24, legend_y))
+        legend_x += 100 # Horizontal spacing for legend items
+
+    # C. Simulation Insight (Bottom Center)
+    insight_y = content_y + 240
+    insight_title = ui_font.render("Simulation Insight: " + config.INFECTION_MODEL.capitalize(), True, config.UI_COLOR)
+    surface.blit(insight_title, (panel_x + margin, insight_y))
+    
+    # Text explanation based on model
+    explanations = {
+        "uniform": "Infection spreads at a constant probability upon contact. Every encounter carries the same risk.",
+        "gaussian": "Risk follows a Normal distribution. Most encounters are low-risk, but rare 'super-spreader' events drive spikes.",
+        "exponential": "Spread risk grows rapidly with proximity. Distancing is significantly more effective here."
+    }
+    explanation = explanations.get(config.INFECTION_MODEL.lower(), "Standard infection dynamics.")
+    
+    # Wrap text manually (simple way)
+    words = explanation.split(' ')
+    lines = []
+    current_line = ""
+    for word in words:
+        test_line = current_line + word + " "
+        if ui_font.size(test_line)[0] < (panel_w - margin * 2):
+            current_line = test_line
+        else:
+            lines.append(current_line)
+            current_line = word + " "
+    lines.append(current_line)
+
+    for i, line in enumerate(lines):
+        line_surf = ui_font.render(line, True, (200, 200, 200))
+        surface.blit(line_surf, (panel_x + margin, insight_y + 35 + i * 28))
+
+    # D. Navigation Options (Bottom)
+    option_rects: list[pygame.Rect] = []
+    opt_y = panel_y + panel_h - 60
+    opt_spacing = panel_w // (len(options) + 1)
+    
+    for i, opt in enumerate(options):
+        is_sel = (i == selected_index)
+        color = config.WHITE if is_sel else (150, 150, 150)
+        surf = ui_font.render(opt, True, color)
+        rect = surf.get_rect(center=(panel_x + opt_spacing * (i + 1), opt_y))
+        surface.blit(surf, rect)
+        
+        click_rect = rect.inflate(40, 20)
+        option_rects.append(click_rect)
+        
+        if is_sel:
+            pygame.draw.line(surface, color, (rect.left, rect.bottom + 2), (rect.right, rect.bottom + 2), 2)
+
+    return option_rects
+
 def draw_menu(
     surface: pygame.Surface,
     title_font: pygame.font.Font,
@@ -134,8 +257,47 @@ def draw_menu(
         overlay.fill((0, 0, 0, 160))
         surface.blit(overlay, (0, 0))
 
-    # Panel
-    panel_w, panel_h = 400, 260
+    # --- Title (Text or Surface) ---
+    if isinstance(title, pygame.Surface):
+        title_surf = title
+    else:
+        title_surf = title_font.render(title, True, config.UI_COLOR)
+
+    # --- Subtitle ---
+    sub_surf = None
+    if subtitle:
+        sub_surf = ui_font.render(subtitle, True, (180, 180, 180))
+
+    # --- Options ---
+    rendered_options = []
+    for opt_text in options:
+        surf_normal = ui_font.render(opt_text, True, (200, 200, 200))
+        surf_sel = ui_font.render(opt_text, True, (255, 255, 255))
+        rendered_options.append((surf_normal, surf_sel))
+
+    # --- Dynamic Panel Sizing ---
+    margin_v = 30
+    margin_h = 40
+    option_gap = 10
+    
+    # Width: Max of logo, subtitle, and options + horizontal margins
+    content_w = title_surf.get_width()
+    if sub_surf:
+        content_w = max(content_w, sub_surf.get_width())
+    for (sn, ss) in rendered_options:
+        content_w = max(content_w, sn.get_width() + 40) # 40 for selection markers
+    
+    panel_w = content_w + margin_h * 2
+    
+    # Height: Sum of components + vertical margins
+    content_h = title_surf.get_height() + 20 # Title height + gap
+    if sub_surf:
+        content_h += sub_surf.get_height() + 20
+    
+    content_h += len(options) * 30 # Options (assume 30px per line)
+    
+    panel_h = content_h + margin_v * 2
+    
     panel_x = (config.WIDTH - panel_w) // 2
     panel_y = (config.HEIGHT - panel_h) // 2
     panel_rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
@@ -143,45 +305,39 @@ def draw_menu(
     pygame.draw.rect(surface, (20, 20, 20), panel_rect, border_radius=12)
     pygame.draw.rect(surface, config.UI_COLOR, panel_rect, 2, border_radius=12)
 
-    # Title (Text or Surface)
-    if isinstance(title, pygame.Surface):
-        title_surf = title
-    else:
-        title_surf = title_font.render(title, True, config.UI_COLOR)
-        
-    # Position title near top of panel
-    title_rect = title_surf.get_rect(center=(config.WIDTH // 2, panel_y + 15 + title_surf.get_height() // 2))
+    # --- Rendering ---
+    curr_y = panel_y + margin_v
+    
+    # Logo / Title
+    title_rect = title_surf.get_rect(centerx=config.WIDTH // 2, top=curr_y)
     surface.blit(title_surf, title_rect)
+    curr_y = title_rect.bottom + 15
 
     # Subtitle
-    if subtitle:
-        sub_surf = ui_font.render(subtitle, True, (180, 180, 180))
-        # Place subtitle below title
-        sub_rect = sub_surf.get_rect(center=(config.WIDTH // 2, title_rect.bottom + 15))
+    if sub_surf:
+        sub_rect = sub_surf.get_rect(centerx=config.WIDTH // 2, top=curr_y)
         surface.blit(sub_surf, sub_rect)
-        start_y = sub_rect.bottom + 20
+        curr_y = sub_rect.bottom + 20
     else:
-        start_y = title_rect.bottom + 25
+        curr_y += 10
 
     # Options
     option_rects: list[pygame.Rect] = []
-
-    for i, text in enumerate(options):
+    for i, (sn, ss) in enumerate(rendered_options):
         is_sel = (i == selected_index)
-        color = (255, 255, 255) if is_sel else (200, 200, 200)
-
-        surf = ui_font.render(text, True, color)
-        rect = surf.get_rect(center=(config.WIDTH // 2, start_y + i * 30))
+        surf = ss if is_sel else sn
+        rect = surf.get_rect(centerx=config.WIDTH // 2, top=curr_y)
         surface.blit(surf, rect)
 
-        # Expand clickable area a bit
-        click_rect = rect.inflate(120, 10)
-        option_rects.append(click_rect)
-
         if is_sel:
-            marker = ui_font.render(">>", True, color)
-            mrect = marker.get_rect(midright=(rect.left - 14, rect.centery))
+            marker = ui_font.render(">>", True, (255, 255, 255))
+            mrect = marker.get_rect(midright=(rect.left - 10, rect.centery))
             surface.blit(marker, mrect)
+
+        # Expand clickable area
+        click_rect = rect.inflate(panel_w // 2, 8)
+        option_rects.append(click_rect)
+        curr_y += 30
 
     return option_rects
 

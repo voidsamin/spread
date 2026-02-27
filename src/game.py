@@ -9,7 +9,7 @@ import config
 from agents import spawn_agents, resolve_agent_collisions
 from doctor import Doctor
 from projectiles import Projectile
-from ui import draw_fps, draw_hud, draw_infection_curve, draw_menu, draw_settings_menu
+from ui import draw_fps, draw_hud, draw_infection_curve, draw_menu, draw_settings_menu, draw_pause_overlay
 
 
 class Game:
@@ -57,9 +57,9 @@ class Game:
         # Load logo image
         logo_path = os.path.join(os.path.dirname(__file__), "components", "logo.png")
         self.logo = pygame.image.load(logo_path).convert_alpha()
-        # Scale logo to a reasonable size (e.g., max 300px width)
+        # Scale logo to a reasonable size
         logo_aspect = self.logo.get_width() / self.logo.get_height()
-        target_w = 300
+        target_w = config.LOGO_TARGET_WIDTH
         target_h = int(target_w / logo_aspect)
         self.logo = pygame.transform.smoothscale(self.logo, (target_w, target_h))
 
@@ -129,6 +129,9 @@ class Game:
 
         # Elapsed time
         self.elapsed_time = 0.0
+
+        # Screen capture for pause blur
+        self.pause_screenshot = None
 
         # Infection ratio history (for curve overlay)
         self.history_timer = 0.0
@@ -409,7 +412,8 @@ class Game:
 
                 # ---------- PLAYING ----------
                 elif self.state == config.PLAYING:
-                    if event.key == pygame.K_ESCAPE:
+                    if event.key == pygame.K_ESCAPE or event.key == pygame.K_s:
+                        self.pause_screenshot = self.capture_screen_blur()
                         self.state = config.PAUSED
                         self.menu_index = 0
                     elif event.key == pygame.K_F1:
@@ -423,7 +427,7 @@ class Game:
 
                 # ---------- PAUSED ----------
                 elif self.state == config.PAUSED:
-                    if event.key == pygame.K_ESCAPE:
+                    if event.key == pygame.K_ESCAPE or event.key == pygame.K_s:
                         self.state = config.PLAYING
                     elif event.key in (pygame.K_UP, pygame.K_w):
                         self.menu_index = (self.menu_index - 1) % len(self.pause_menu_options)
@@ -582,6 +586,15 @@ class Game:
             self.state = config.WIN
             self.menu_index = 0
 
+    def capture_screen_blur(self) -> pygame.Surface:
+        """Capture the current screen and apply a simple blur effect."""
+        # Get actual screen surface
+        raw = self.screen.copy()
+        # Scale down then up to achieve a cheap 'pixelated' blur
+        small = pygame.transform.smoothscale(raw, (config.WIDTH // 8, config.HEIGHT // 8))
+        blurred = pygame.transform.smoothscale(small, (config.WIDTH, config.HEIGHT))
+        return blurred
+
     def draw(self) -> None:
         self.screen.fill(config.BG_COLOR)
 
@@ -614,18 +627,21 @@ class Game:
             return
 
         # ---------- WORLD (PLAYING / PAUSED / WIN / LOSE) ----------
-        for a in self.agents:
-            a.draw(self.screen, self.strain_sprites, self.healthy_sprite)
+        if self.state == config.PAUSED and self.pause_screenshot:
+            self.screen.blit(self.pause_screenshot, (0, 0))
+        else:
+            for a in self.agents:
+                a.draw(self.screen, self.strain_sprites, self.healthy_sprite)
 
-        for p in self.projectiles:
-            p.draw(self.screen)
+            for p in self.projectiles:
+                p.draw(self.screen)
 
-        # Only draw doctor while actively playing (cleaner for overlays)
-        if self.state == config.PLAYING:
-            self.doctor.draw(self.screen)
+            # Only draw doctor while actively playing (cleaner for overlays)
+            if self.state == config.PLAYING:
+                self.doctor.draw(self.screen)
 
         # ---------- HUD / DEBUG ----------
-        # HUD should only show in PLAYING (optional: also show in PAUSED)
+        # HUD should only show in PLAYING
         if self.state == config.PLAYING:
             if self.show_hud:
                 draw_hud(
@@ -658,15 +674,24 @@ class Game:
 
         # ---------- OVERLAYS ----------
         if self.state == config.PAUSED:
-            self.menu_option_rects = draw_menu(
+            # Bundle stats for the overlay
+            stats = {
+                "elapsed": f"{int(self.elapsed_time // 60):02d}:{int(self.elapsed_time % 60):02d}",
+                "healthy": self.healthy_count,
+                "infected": self.infected_count,
+                "ratio": self.infected_ratio,
+                "multiplier": self.difficulty_multiplier
+            }
+            
+            self.menu_option_rects = draw_pause_overlay(
                 self.screen,
                 self.font_title,
                 self.font_ui,
-                "PAUSED",
+                stats,
+                list(self.ratio_history),
+                {sid: list(h) for sid, h in self.strain_histories.items()},
                 self.pause_menu_options,
-                self.menu_index,
-                subtitle="Esc to resume",
-                background=self.menu_background,
+                self.menu_index
             )
 
         elif self.state == config.WIN:

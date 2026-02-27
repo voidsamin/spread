@@ -171,6 +171,9 @@ HISTORY_SAMPLE_DT = 0.25     # sample infected_ratio every 0.25s
 # Graph placement (x, y, width, height)
 GRAPH_RECT = (540, 10, 250, 90)
 
+# Logo settings
+LOGO_TARGET_WIDTH = 550  # Significantly bigger logo for main menu
+
 
 
 # -----------------------------

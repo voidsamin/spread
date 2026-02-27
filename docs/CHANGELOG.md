@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.30 — UI Enhancements & Modern Pause Menu
+### Added
+- **Modern Pause Menu ('S' Key)**: Pressing 'S' now triggers a feature-rich pause overlay.
+  - **Dynamic Background Blur**: Captures and blurs the game world in real-time.
+  - **Comprehensive Statistics**: Displays elapsed time, healthy/infected counts, and current speed multipliers.
+  - **Enlarged Infection Graph**: Shows the detailed infection trend lines for all strains.
+  - **Simulation Insights**: Provides a clean explanation of the current infection model's logic (Uniform, Gaussian, or Exponential).
+  - **Strain Legend**: Added a color-coded legend to clarify which color represents which virus strain (Alpha/Beta/Gamma).
+- **Branding Refresh**: Significantly increased the main menu logo size for a more premium first impression.
+  - **Dynamic Layout**: Implemented a responsive panel system for the main menu that automatically scales to prevent logo/text overflow.
+
+### Changed
+- **Pause Logic**: Both 'Esc' and 'S' can now be used to toggle the pause state.
+- **HUD Consistency**: Statistics in the pause menu remain consistent with the live HUD.
+
 ## v0.29 — Statistical Infection Models
 ### Added
 - **Statistical Infection Models**: Added support for three infection probability models:
