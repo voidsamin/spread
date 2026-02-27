@@ -691,7 +691,9 @@ class Game:
                 list(self.ratio_history),
                 {sid: list(h) for sid, h in self.strain_histories.items()},
                 self.pause_menu_options,
-                self.menu_index
+                self.menu_index,
+                strain_counts=self.strain_counts,
+                total_agents=len(self.agents)
             )
 
         elif self.state == config.WIN:
