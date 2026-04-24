@@ -199,7 +199,16 @@ Deliverable: The project demonstrates clear computational modeling and statistic
 
 ---
 
-## 14) Performance + polish (Week 6)
+## 14) Hospital Simulation Assets & Animations (The "Simulation Feel" Update)
+- [ ] (★) Design/Import hospital-themed background map (floors, walls, zones)
+- [ ] (★) Replace agent circles with detailed character sprites (Doctor, Patient, Infected)
+- [ ] (★) Implement frame-based walking animations for all agent types
+- [ ] (★) Add particle effects or animations for curing and infection spread
+- [ ] (☆) Add decorative hospital assets (beds, equipment, medical signs)
+
+---
+
+## 15) Performance + polish (Week 6)
 - [ ] (★) Profile with high agent counts (e.g., 500, 1000)
 - [ ] (★) Add spatial hashing/grid if collisions become slow
 - [ ] (☆) Add screen shake or subtle FX
@@ -210,7 +219,7 @@ Deliverable: Smooth performance and stable gameplay.
 
 ---
 
-## 15) Documentation + final submission
+## 16) Documentation + final submission
 - [ ] (★) Update README with:
   - [ ] How to run
   - [ ] Controls
@@ -236,3 +245,5 @@ Deliverable: Clear documentation and reproducible results.
 7. Win/lose states + HUD  
 8. Pellets + infection graph  
 9. Menu + polish  
+10. Hospital visuals & animations  
+11. Final documentation  

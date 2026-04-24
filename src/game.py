@@ -224,6 +224,42 @@ class Game:
                 "options": ["uniform", "gaussian", "exponential"],
             },
             {
+                "name": "Lose Threshold (% infected)",
+                "key": "lose_threshold_ratio",
+                "type": "float",
+                "value": config.LOSE_THRESHOLD_RATIO,
+                "min": 0.10,
+                "max": 0.90,
+                "step": 0.05,
+            },
+            {
+                "name": "Lose Duration (seconds)",
+                "key": "lose_threshold_seconds",
+                "type": "float",
+                "value": config.LOSE_THRESHOLD_SECONDS,
+                "min": 30.0,
+                "max": 600.0,
+                "step": 30.0,
+            },
+            {
+                "name": "Win Threshold (% infected)",
+                "key": "win_threshold_ratio",
+                "type": "float",
+                "value": config.WIN_THRESHOLD_RATIO,
+                "min": 0.01,
+                "max": 0.50,
+                "step": 0.05,
+            },
+            {
+                "name": "Win Duration (seconds)",
+                "key": "win_threshold_seconds",
+                "type": "float",
+                "value": config.WIN_THRESHOLD_SECONDS,
+                "min": 10.0,
+                "max": 120.0,
+                "step": 10.0,
+            },
+            {
                 "name": "Apply & Back",
                 "key": "_apply",
                 "type": "action",
@@ -328,6 +364,14 @@ class Game:
                 config.INITIAL_INFECTED = value
             elif key == "infection_model":
                 config.INFECTION_MODEL = value
+            elif key == "lose_threshold_ratio":
+                config.LOSE_THRESHOLD_RATIO = value
+            elif key == "lose_threshold_seconds":
+                config.LOSE_THRESHOLD_SECONDS = value
+            elif key == "win_threshold_ratio":
+                config.WIN_THRESHOLD_RATIO = value
+            elif key == "win_threshold_seconds":
+                config.WIN_THRESHOLD_SECONDS = value
 
     def adjust_setting(self, delta: int) -> None:
         """Adjust the currently selected setting by delta (-1 for left, +1 for right)."""

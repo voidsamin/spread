@@ -653,8 +653,14 @@ def draw_settings_menu(
         overlay.fill((0, 0, 0, 160))
         surface.blit(overlay, (0, 0))
 
-    # Larger panel for settings
-    panel_w, panel_h = 600, 500
+    # Dynamic panel sizing based on number of settings
+    line_height = 32
+    header_height = 110  # Space for title, subtitle, and padding
+    min_panel_h = 400
+    content_h = len(settings) * line_height + header_height + 40  # +40 for bottom padding
+    panel_h = max(min_panel_h, min(content_h, int(config.HEIGHT * 0.85)))  # Cap at 85% of screen height
+    
+    panel_w = 600
     panel_x = (config.WIDTH - panel_w) // 2
     panel_y = (config.HEIGHT - panel_h) // 2
     panel_rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
@@ -673,14 +679,23 @@ def draw_settings_menu(
     sub_rect = sub_surf.get_rect(center=(config.WIDTH // 2, panel_y + 75))
     surface.blit(sub_surf, sub_rect)
 
-    # Settings list
+    # Settings list with scrolling support if needed
     option_rects: list[pygame.Rect] = []
     start_y = panel_y + 110
-    line_height = 32
+    max_visible = (panel_h - header_height - 20) // line_height
+    
+    # Scroll to keep selected item visible
+    scroll_offset = 0
+    if selected_index >= max_visible:
+        scroll_offset = selected_index - max_visible + 1
 
     for i, setting in enumerate(settings):
+        # Skip items outside the visible range
+        if i < scroll_offset or i >= scroll_offset + max_visible:
+            continue
+            
         is_sel = (i == selected_index)
-        y_pos = start_y + i * line_height
+        y_pos = start_y + (i - scroll_offset) * line_height
 
         # Setting name
         name_color = (255, 255, 255) if is_sel else (200, 200, 200)
