@@ -539,9 +539,7 @@ class Game:
                     if event.button == 1:
                         self.doctor.try_cure(self.agents)
                     elif event.button == 3:
-                        proj = self.doctor.try_shoot()
-                        if proj is not None:
-                            self.projectiles.append(proj)
+                        self.doctor.try_shoot()
 
 
 
@@ -558,6 +556,11 @@ class Game:
         
         # Update doctor
         self.doctor.update(dt)
+
+        # Collect deferred projectile from shooting animation
+        proj = self.doctor.collect_projectile()
+        if proj is not None:
+            self.projectiles.append(proj)
 
         # Update agents with difficulty scaling
         for a in self.agents:
@@ -618,6 +621,7 @@ class Game:
         if self.time_above_threshold >= config.LOSE_THRESHOLD_SECONDS:
             self.state = config.LOSE
             self.menu_index = 0
+            self.doctor.set_end_state(won=False)
 
         # ---- WIN condition tracking ----
         # Added warmup period to prevent instant-win at game start
@@ -629,6 +633,7 @@ class Game:
         if self.time_below_win_threshold >= config.WIN_THRESHOLD_SECONDS:
             self.state = config.WIN
             self.menu_index = 0
+            self.doctor.set_end_state(won=True)
 
     def capture_screen_blur(self) -> pygame.Surface:
         """Capture the current screen and apply a simple blur effect."""

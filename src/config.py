@@ -185,3 +185,60 @@ DIFFICULTY_MAX_MULTIPLIER = 2.5         # Maximum speed multiplier
 DIFFICULTY_RAMP_TIME = 180.0            # Time in seconds to reach max difficulty (3 minutes)
 DIFFICULTY_CURVE_TYPE = "sigmoid"       # Curve shape: "linear", "exponential", or "sigmoid"
 DIFFICULTY_CURVE_STEEPNESS = 0.5        # Controls curve aggressiveness (0.1 = gentle, 1.0 = steep)
+
+
+# -----------------------------
+# Doctor animation
+# -----------------------------
+DOCTOR_ANIM_FPS = 10                    # frames per second for doctor animations
+DOCTOR_SPRITE_SCALE = 2.5              # scale factor applied to each frame for display
+
+# Spritesheet frame rects  (x, y, w, h) – auto-detected from transparent gaps
+DOCTOR_FRAMES = {
+    "standing": [
+        (25, 0, 34, 45),
+        (61, 0, 33, 45),
+        (100, 0, 33, 45),
+        (138, 0, 34, 45),
+    ],
+    "running": [
+        (1, 0, 36, 45),
+        (40, 0, 37, 45),
+        (80, 0, 38, 45),
+        (122, 0, 37, 45),
+        (162, 0, 35, 45),
+    ],
+    "shooting": [
+        (1, 0, 19, 45),
+        (22, 0, 19, 45),
+        (42, 0, 19, 45),
+        (64, 0, 19, 45),
+        (84, 0, 22, 45),
+        (111, 0, 33, 45),
+        (147, 0, 22, 45),
+        (172, 0, 24, 45),
+    ],
+    "injecting": [
+        (0, 0, 36, 45),
+        (38, 0, 43, 45),
+        (83, 0, 46, 45),
+        (131, 0, 35, 45),
+        (171, 0, 23, 45),
+    ],
+    "win": [
+        (2, 0, 36, 52),
+        (42, 0, 36, 52),
+        (82, 0, 36, 52),
+    ],
+    "lose": [
+        (0, 0, 30, 51),
+        (35, 0, 29, 51),
+        (70, 0, 29, 51),
+    ],
+}
+
+# Bullet sprite rect inside bullet_transparent_bg.png
+DOCTOR_BULLET_RECT = (76, 0, 45, 45)
+
+# Shooting: spawn projectile when this frame index is reached (0-based)
+DOCTOR_SHOOT_FIRE_FRAME = 5
