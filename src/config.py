@@ -191,7 +191,17 @@ DIFFICULTY_CURVE_STEEPNESS = 0.5        # Controls curve aggressiveness (0.1 = g
 # Doctor animation
 # -----------------------------
 DOCTOR_ANIM_FPS = 10                    # frames per second for doctor animations
-DOCTOR_SPRITE_SCALE = 2.5              # scale factor applied to each frame for display
+DOCTOR_SPRITE_SCALE = 2.5              # default fallback scale
+
+# Per-animation scale overrides (tweak these to balance visual sizes)
+DOCTOR_ANIMATION_SCALES = {
+    "standing":  1.8,
+    "running":   1.8,
+    "shooting":  2.5,
+    "injecting": 2.5,
+    "win":       2.5,
+    "lose":      2.5,
+}
 
 # Spritesheet frame rects  (x, y, w, h) – auto-detected from transparent gaps
 DOCTOR_FRAMES = {

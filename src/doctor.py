@@ -67,7 +67,8 @@ class Doctor:
         self.aim_dir = pygame.Vector2(1, 0)
 
         # ------ Sprite / Animation setup ------
-        scale = config.DOCTOR_SPRITE_SCALE
+        scales = config.DOCTOR_ANIMATION_SCALES
+        fallback = config.DOCTOR_SPRITE_SCALE
 
         # Load spritesheets once
         standing_sheet = _load_sheet("standing_transparent_bg.png")
@@ -78,14 +79,14 @@ class Doctor:
         lose_sheet     = _load_sheet("lose_transparent_bg.png")
         bullet_sheet   = _load_sheet("bullet_transparent_bg.png")
 
-        # Cut frames using config rects
+        # Cut frames using config rects with per-animation scales
         self.frames: dict[str, list[pygame.Surface]] = {
-            AnimState.IDLE:      _cut_frames(standing_sheet, config.DOCTOR_FRAMES["standing"], scale),
-            AnimState.RUNNING:   _cut_frames(running_sheet,  config.DOCTOR_FRAMES["running"],  scale),
-            AnimState.SHOOTING:  _cut_frames(shooting_sheet, config.DOCTOR_FRAMES["shooting"], scale),
-            AnimState.INJECTING: _cut_frames(injecting_sheet, config.DOCTOR_FRAMES["injecting"], scale),
-            AnimState.WIN:       _cut_frames(win_sheet,      config.DOCTOR_FRAMES["win"],      scale),
-            AnimState.LOSE:      _cut_frames(lose_sheet,     config.DOCTOR_FRAMES["lose"],     scale),
+            AnimState.IDLE:      _cut_frames(standing_sheet, config.DOCTOR_FRAMES["standing"], scales.get("standing", fallback)),
+            AnimState.RUNNING:   _cut_frames(running_sheet,  config.DOCTOR_FRAMES["running"],  scales.get("running", fallback)),
+            AnimState.SHOOTING:  _cut_frames(shooting_sheet, config.DOCTOR_FRAMES["shooting"], scales.get("shooting", fallback)),
+            AnimState.INJECTING: _cut_frames(injecting_sheet, config.DOCTOR_FRAMES["injecting"], scales.get("injecting", fallback)),
+            AnimState.WIN:       _cut_frames(win_sheet,      config.DOCTOR_FRAMES["win"],      scales.get("win", fallback)),
+            AnimState.LOSE:      _cut_frames(lose_sheet,     config.DOCTOR_FRAMES["lose"],     scales.get("lose", fallback)),
         }
 
         # Also pre-flip every frame set for facing-left rendering
