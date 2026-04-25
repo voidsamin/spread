@@ -184,26 +184,26 @@ class Doctor:
 
         # SHOOTING: play through once, then return to idle
         if self.anim_state == AnimState.SHOOTING:
-            self._advance_animation(dt, loop=False)
+            finished = self._advance_animation(dt, loop=False)
             # Check if we should fire the projectile this frame
             if not self._projectile_fired and self.current_frame >= config.DOCTOR_SHOOT_FIRE_FRAME:
                 self._projectile_fired = True
                 self._create_pending_projectile()
             # Animation finished?
-            if self.current_frame >= len(self.frames[AnimState.SHOOTING]) - 1 and self.anim_timer >= self.anim_spf:
+            if finished:
                 self._set_anim(AnimState.IDLE)
             return
 
         # INJECTING: play through once, then return to idle
         if self.anim_state == AnimState.INJECTING:
-            self._advance_animation(dt, loop=False)
-            if self.current_frame >= len(self.frames[AnimState.INJECTING]) - 1 and self.anim_timer >= self.anim_spf:
+            finished = self._advance_animation(dt, loop=False)
+            if finished:
                 self._set_anim(AnimState.IDLE)
             return
 
-        # Detect movement for RUNNING vs IDLE
-        displacement = (self.pos - self._prev_pos).length()
-        is_moving = displacement > self._move_threshold * dt * 60  # scale by approx frame rate
+        # Detect movement: use distance from doctor to cursor target
+        dist_to_target = (self.target_pos - self.pos).length()
+        is_moving = dist_to_target > self._move_threshold
 
         if is_moving:
             if self.anim_state != AnimState.RUNNING:
@@ -215,8 +215,8 @@ class Doctor:
                 if self.current_frame < 4:
                     self.current_frame = 4
                     self.anim_timer = 0.0
-                self._advance_animation(dt, loop=False)
-                if self.anim_timer >= self.anim_spf:
+                finished = self._advance_animation(dt, loop=False)
+                if finished:
                     self._set_anim(AnimState.IDLE)
             else:
                 if self.anim_state != AnimState.IDLE:
@@ -227,8 +227,11 @@ class Doctor:
     # Animation frame advancement
     # ------------------------------------------------------------------
 
-    def _advance_animation(self, dt: float, loop: bool) -> None:
-        """Advance animation timer; move to next frame if needed."""
+    def _advance_animation(self, dt: float, loop: bool) -> bool:
+        """Advance animation timer; move to next frame if needed.
+        
+        Returns True if a non-looping animation has completed its last frame.
+        """
         self.anim_timer += dt
         if self.anim_timer >= self.anim_spf:
             self.anim_timer -= self.anim_spf
@@ -237,6 +240,10 @@ class Doctor:
                 self.current_frame += 1
             elif loop:
                 self.current_frame = 0
+            else:
+                # Non-looping animation reached the end
+                return True
+        return False
 
     def _advance_running(self, dt: float) -> None:
         """Handle the running animation with start/loop/end sub-states.
@@ -355,6 +362,7 @@ class Doctor:
             vel=vel,
             radius=config.PELLET_RADIUS,
             life=config.PELLET_LIFETIME,
+            sprite=self.bullet_sprite,
         )
 
     def collect_projectile(self) -> Projectile | None:

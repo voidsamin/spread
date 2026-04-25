@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import pygame
 import config
 
@@ -11,6 +11,7 @@ class Projectile:
     vel: pygame.Vector2
     radius: int
     life: float  # seconds remaining
+    sprite: pygame.Surface | None = field(default=None, repr=False)
 
     def update(self, dt: float) -> None:
         self.pos += self.vel * dt
@@ -27,4 +28,8 @@ class Projectile:
         return False
 
     def draw(self, surface: pygame.Surface) -> None:
-        pygame.draw.circle(surface, config.DOCTOR_COLOR, (int(self.pos.x), int(self.pos.y)), self.radius)
+        if self.sprite is not None:
+            rect = self.sprite.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+            surface.blit(self.sprite, rect)
+        else:
+            pygame.draw.circle(surface, config.DOCTOR_COLOR, (int(self.pos.x), int(self.pos.y)), self.radius)
