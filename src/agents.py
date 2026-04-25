@@ -22,6 +22,11 @@ class Agent:
     strain_id: int | None = None  # None = healthy, int = specific strain ID
     susceptibility: float = 1.0   # How easily this agent gets infected
 
+    # Animation state (managed per-agent)
+    anim_timer: float = 0.0
+    current_frame: int = 0
+    facing_left: bool = False
+
     def update(self, dt: float, difficulty_multiplier: float = 1.0) -> None:
         # Stochastic "wander": small random acceleration that changes velocity gradually
         # This makes movement look more human/random without teleporting directions.
@@ -42,6 +47,26 @@ class Agent:
         # Move (velocity already affected by difficulty through wander and clamping)
         self.pos += self.vel * dt
 
+        # Update facing direction based on horizontal velocity
+        if abs(self.vel.x) > 0.5:
+            self.facing_left = self.vel.x < 0
+
+        # Advance walk animation
+        self.anim_timer += dt
+        frame_duration = 1.0 / config.AGENT_ANIM_FPS
+        if self.anim_timer >= frame_duration:
+            self.anim_timer -= frame_duration
+            # Determine the correct frame count for the current animation
+            if self.strain_id is not None:
+                anim_key = config.STRAIN_TO_ANIM_KEY.get(self.strain_id, "infected1")
+            else:
+                anim_key = "healthy"
+            total_frames = len(config.AGENT_FRAMES.get(anim_key, []))
+            if total_frames > 0:
+                self.current_frame = (self.current_frame + 1) % total_frames
+            else:
+                self.current_frame = 0
+
 
 
     def bounce_off_walls(self, width: int, height: int) -> None:
@@ -61,25 +86,44 @@ class Agent:
             self.pos.y = height - self.radius
             self.vel.y *= -1
 
-    def draw(self, surface: pygame.Surface, virus_sprites: dict[int, pygame.Surface] | None = None, healthy_sprite: pygame.Surface | None = None) -> None:
+    def draw(
+        self,
+        surface: pygame.Surface,
+        agent_anims: dict[str, list[pygame.Surface]] | None = None,
+        virus_sprites: dict[int, pygame.Surface] | None = None,
+        healthy_sprite: pygame.Surface | None = None,
+    ) -> None:
+        # Determine animation key
+        if self.strain_id is not None:
+            anim_key = config.STRAIN_TO_ANIM_KEY.get(self.strain_id, "infected1")
+        else:
+            anim_key = "healthy"
+
+        # Try animated sprite first
+        if agent_anims and anim_key in agent_anims:
+            frames = agent_anims[anim_key]
+            if frames:
+                idx = self.current_frame % len(frames)
+                frame = frames[idx]
+                if self.facing_left:
+                    frame = pygame.transform.flip(frame, True, False)
+                rect = frame.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+                surface.blit(frame, rect)
+                return
+
+        # Fallback: static sprites (legacy path)
         if self.strain_id is not None and virus_sprites:
-            # Use the specific sprite for this strain
             sprite = virus_sprites.get(self.strain_id)
             if sprite:
                 rect = sprite.get_rect(center=(int(self.pos.x), int(self.pos.y)))
-                
-                # Draw a smaller 'glow' circle under the sprite
                 color = config.STRAINS[self.strain_id]["color"]
                 glow_radius = int(self.radius * 1.6) 
                 pygame.draw.circle(surface, color, (int(self.pos.x), int(self.pos.y)), glow_radius)
-                
                 surface.blit(sprite, rect)
             else:
-                # Fallback if no sprite for this strain
                 color = config.STRAINS[self.strain_id]["color"]
                 pygame.draw.circle(surface, color, (int(self.pos.x), int(self.pos.y)), self.radius)
         elif self.strain_id is None and healthy_sprite:
-            # Center the healthy sprite
             rect = healthy_sprite.get_rect(center=(int(self.pos.x), int(self.pos.y)))
             surface.blit(healthy_sprite, rect)
         else:

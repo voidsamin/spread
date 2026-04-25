@@ -73,29 +73,44 @@ class Game:
         # Hospital floor background
         self.map = HospitalMap()
 
-        # Virus sprite for infected agents
+        # --- Agent walking animation sprites ---
+        agents_dir = os.path.join(os.path.dirname(__file__), "components", "Agents")
+        sheet_files = {
+            "healthy":   "human_walking_transparent_bg.png",
+            "infected1": "infected1_walking_transparent_bg.png",
+            "infected2": "infected2_walking_transparent_bg.png",
+            "infected3": "infected3_walking_transparent_bg.png",
+        }
+        self.agent_anims: dict[str, list[pygame.Surface]] = {}
+        scale = config.AGENT_SPRITE_SCALE
+        for anim_key, filename in sheet_files.items():
+            sheet = pygame.image.load(os.path.join(agents_dir, filename)).convert_alpha()
+            rects = config.AGENT_FRAMES[anim_key]
+            frames: list[pygame.Surface] = []
+            for rx, ry, rw, rh in rects:
+                frame = sheet.subsurface(pygame.Rect(rx, ry, rw, rh))
+                scaled = pygame.transform.smoothscale(
+                    frame, (int(rw * scale), int(rh * scale))
+                )
+                frames.append(scaled)
+            self.agent_anims[anim_key] = frames
+
+        # Legacy static sprites (kept as fallbacks)
         virus_path = os.path.join(os.path.dirname(__file__), "components", "virus.png")
         orig_virus = pygame.image.load(virus_path).convert_alpha()
-        # Adjusted scaling to match healthy agents (2.2x multiplier)
         virus_size = int(config.AGENT_RADIUS * 2.2)
         self.virus_sprite = pygame.transform.smoothscale(orig_virus, (virus_size, virus_size))
 
-        # Create strain-specific tinted versions of the virus sprite
         self.strain_sprites = {}
         for sid, s_info in config.STRAINS.items():
-            # Create a tinted version
             tinted = self.virus_sprite.copy()
-            # We use a mix of color and multiplicative blending to ensure the color is prominent
-            # but preserve some of the sprite's texture/detail.
             color_surf = pygame.Surface((virus_size, virus_size), pygame.SRCALPHA)
             color_surf.fill(s_info["color"])
             tinted.blit(color_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
             self.strain_sprites[sid] = tinted
 
-        # Healthy agent sprite
         healthy_path = os.path.join(os.path.dirname(__file__), "components", "healthy.png")
         self.healthy_sprite = pygame.image.load(healthy_path).convert_alpha()
-        # Same multiplier for healthy sprite to maintain uniform size.
         healthy_size = int(config.AGENT_RADIUS * 2.2)
         self.healthy_sprite = pygame.transform.smoothscale(self.healthy_sprite, (healthy_size, healthy_size))
         
@@ -707,7 +722,7 @@ class Game:
             self.screen.blit(self.pause_screenshot, (0, 0))
         else:
             for a in self.agents:
-                a.draw(self.screen, self.strain_sprites, self.healthy_sprite)
+                a.draw(self.screen, self.agent_anims, self.strain_sprites, self.healthy_sprite)
 
             for p in self.projectiles:
                 p.draw(self.screen)

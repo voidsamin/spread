@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.34 — Agent Animation Sprites
+### Added
+- **Agent Animation Sprites**: Added animation sprites for healthy agents and infected agents (three strains) using spritesheets.
+
+### Changed
+- **Agent Drawing**: Agents are now drawn using animation frames instead of simple colored circles.
+
 ## v0.33 — Map & UI polish
 ### Added
 - **Map**: Added a hospital floor background image to the game.
