@@ -13,8 +13,6 @@ All notable changes to this project will be documented here.
 - Unable to shoot or inject after the first shot action.
 - Win/Lose sprite persisting on screen after game restart.
 
----
-
 ## v0.31 — Doctor Agent Sprite Animations
 ### Added
 - **Animated Doctor Sprite**: Replaced the primitive blue cross with a fully animated character sprite.
