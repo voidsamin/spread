@@ -8,6 +8,7 @@ import pygame
 import config
 from agents import spawn_agents, resolve_agent_collisions
 from doctor import Doctor
+from map import HospitalMap
 from projectiles import Projectile
 from ui import draw_fps, draw_hud, draw_infection_curve, draw_menu, draw_settings_menu, draw_pause_overlay
 
@@ -68,6 +69,9 @@ class Game:
 
         # Doctor (player)
         self.doctor = Doctor()
+
+        # Hospital floor background
+        self.map = HospitalMap()
 
         # Virus sprite for infected agents
         virus_path = os.path.join(os.path.dirname(__file__), "components", "virus.png")
@@ -661,7 +665,7 @@ class Game:
         return blurred
 
     def draw(self) -> None:
-        self.screen.fill(config.BG_COLOR)
+        self.map.draw(self.screen)
 
         # ---------- MENU ----------
         if self.state == config.MENU:
@@ -696,6 +700,7 @@ class Game:
             self.doctor.draw(self.screen)
             pygame.display.flip()
             return
+
 
         # ---------- WORLD (PLAYING / PAUSED / WIN / LOSE) ----------
         if self.state == config.PAUSED and self.pause_screenshot:

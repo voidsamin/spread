@@ -6,7 +6,7 @@ import config
 
 
 def draw_fps(surface: pygame.Surface, clock: pygame.time.Clock, font: pygame.font.Font) -> None:
-    fps_text = font.render(f"FPS: {clock.get_fps():.0f}", True, config.UI_COLOR)
+    fps_text = font.render(f"FPS: {clock.get_fps():.0f}", True, config.HUD_COLOR)
     surface.blit(fps_text, (10, 8))
 
 
@@ -64,12 +64,20 @@ def draw_hud(
     else:
         lines.append(f"Shot CD: {max(0.0, shot_cd):.2f}s")
 
-    # Render
+    # Render with semi-transparent backing panel
     x, y = 10, 30
+    line_h = 22
+    pad = 6
+    panel_w = 220
+    panel_h = len(lines) * line_h + pad * 2
+    backing = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
+    backing.fill((255, 255, 255, 140))
+    surface.blit(backing, (x - pad, y - pad))
+
     for line in lines:
-        surf = font.render(line, True, config.UI_COLOR)
+        surf = font.render(line, True, config.HUD_COLOR)
         surface.blit(surf, (x, y))
-        y += 22
+        y += line_h
 
 
 def draw_infection_curve(
@@ -83,8 +91,11 @@ def draw_infection_curve(
 
     x, y, w, h = rect
 
-    # Outline box
-    pygame.draw.rect(surface, config.UI_COLOR, pygame.Rect(x, y, w, h), 1)
+    # Outline box with backing
+    backing = pygame.Surface((w, h), pygame.SRCALPHA)
+    backing.fill((255, 255, 255, 140))
+    surface.blit(backing, (x, y))
+    pygame.draw.rect(surface, config.HUD_COLOR, pygame.Rect(x, y, w, h), 1)
 
     # Helper to convert ratio list to points
     def ratios_to_pts(r_list: list[float]):
@@ -106,10 +117,10 @@ def draw_infection_curve(
                 color = config.STRAINS[sid]["color"]
                 pygame.draw.lines(surface, color, False, pts, 1)
 
-    # Draw total curve (thicker, white/default)
+    # Draw total curve (thicker)
     pts = ratios_to_pts(ratios)
     if pts:
-        pygame.draw.lines(surface, config.UI_COLOR, False, pts, 2)
+        pygame.draw.lines(surface, config.HUD_COLOR, False, pts, 2)
 
 
 def draw_healthy_population_curve(

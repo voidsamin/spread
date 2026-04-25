@@ -67,7 +67,8 @@ INFECTED_COLOR = STRAINS[0]["color"]
 
 # Doctor / UI
 DOCTOR_COLOR = (80, 160, 230)
-UI_COLOR = (235, 235, 235)
+UI_COLOR = (235, 235, 235)          # Light — used on dark menu/overlay panels
+HUD_COLOR = (25, 25, 30)            # Dark — used on the light hospital floor
 
 
 # -----------------------------

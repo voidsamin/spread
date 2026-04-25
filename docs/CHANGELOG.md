@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.33 — Map & UI polish
+### Added
+- **Map**: Added a hospital floor background image to the game.
+
+### Changed
+- **Background**: Changed the background color of the game to a light gray to improve contrast against the new background.
+- **HUD**: Changed the color of the HUD and Infection Curve to a dark gray to improve contrast against the new background.
+- **UI**: Added a semi-transparent backing panel to the HUD and Infection Curve to improve readability.
+
 ## v0.32 — Animation Bug Fixes & Post-Game Sequence
 ### Added
 - **Per-Animation Scaling**: Each animation state now has its own scale factor (`DOCTOR_ANIMATION_SCALES` in config) to balance visual sizes between idle/running and shooting/injecting sprites.
