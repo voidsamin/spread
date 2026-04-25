@@ -264,7 +264,7 @@ DOCTOR_SHOOT_FIRE_FRAME = 5
 # Agent animation
 # -----------------------------
 AGENT_ANIM_FPS = 10                     # walk cycle speed for agents
-AGENT_SPRITE_SCALE = 2.2               # scale factor for agent sprites
+AGENT_SPRITE_SCALE = 3.2               # scale factor for agent sprites
 
 # Spritesheet frame rects  (x, y, w, h) – auto-detected from transparent gaps
 AGENT_FRAMES = {

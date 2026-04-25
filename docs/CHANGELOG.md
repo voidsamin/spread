@@ -7,6 +7,7 @@ All notable changes to this project will be documented here.
 
 ### Changed
 - **Agent Drawing**: Agents are now drawn using animation frames instead of simple colored circles.
+- **Agent Sprite Scale**: Increased agent sprite scale factor from 2.2 to 3.2 for better visibility.
 
 ## v0.33 — Map & UI polish
 ### Added
