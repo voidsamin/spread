@@ -86,8 +86,13 @@ MENU = "MENU"
 SETTINGS = "SETTINGS"
 PLAYING = "PLAYING"
 PAUSED = "PAUSED"
+WIN_ANIMATION = "WIN_ANIMATION"    # intermediate: doctor plays win anim, agents hidden
+LOSE_ANIMATION = "LOSE_ANIMATION"  # intermediate: doctor plays lose anim, agents hidden
 WIN = "WIN"
 LOSE = "LOSE"
+
+# How long the win/lose animation plays before showing the end-game menu (seconds)
+POST_GAME_ANIM_DURATION = 2.5
 
 
 
@@ -190,7 +195,7 @@ DIFFICULTY_CURVE_STEEPNESS = 0.5        # Controls curve aggressiveness (0.1 = g
 # -----------------------------
 # Doctor animation
 # -----------------------------
-DOCTOR_ANIM_FPS = 10                    # frames per second for doctor animations
+DOCTOR_ANIM_FPS = 12                    # frames per second for doctor animations
 DOCTOR_SPRITE_SCALE = 2.5              # default fallback scale
 
 # Per-animation scale overrides (tweak these to balance visual sizes)

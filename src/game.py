@@ -133,6 +133,9 @@ class Game:
         # Screen capture for pause blur
         self.pause_screenshot = None
 
+        # Post-game animation timer
+        self.post_game_timer = 0.0
+
         # Infection ratio history (for curve overlay)
         self.history_timer = 0.0
         maxlen = int(config.HISTORY_SECONDS / config.HISTORY_SAMPLE_DT) + 1
@@ -288,14 +291,14 @@ class Game:
         for h in self.strain_histories.values():
             h.clear()
         
-        # Reset doctor gameplay state (ammo/cooldowns)
-        self.doctor.cooldown_timer = 0.0
-        self.doctor.shot_cooldown_timer = 0.0
-        self.doctor.ammo = config.PELLET_AMMO_MAX
-        self.doctor.reload_timer = 0.0
+        # Reset doctor (animation + gameplay state)
+        self.doctor.reset()
 
         # Reset difficulty
         self.difficulty_multiplier = config.DIFFICULTY_START_MULTIPLIER
+
+        # Reset post-game animation timer
+        self.post_game_timer = 0.0
 
     def calculate_difficulty_multiplier(self) -> float:
         """Calculate the current difficulty multiplier based on elapsed time and curve type."""
@@ -544,7 +547,20 @@ class Game:
 
 
     def update(self, dt: float) -> None:
-        # Only simulate while playing (future-proof for MENU etc.)
+        # Handle post-game animation states (tick doctor animation + timer)
+        if self.state in (config.WIN_ANIMATION, config.LOSE_ANIMATION):
+            self.doctor.update(dt)
+            self.post_game_timer += dt
+            if self.post_game_timer >= config.POST_GAME_ANIM_DURATION:
+                # Transition to the final menu state
+                if self.state == config.WIN_ANIMATION:
+                    self.state = config.WIN
+                else:
+                    self.state = config.LOSE
+                self.menu_index = 0
+            return
+
+        # Only simulate while playing
         if self.state != config.PLAYING:
             return
         
@@ -619,8 +635,8 @@ class Game:
             self.time_above_threshold = 0.0
 
         if self.time_above_threshold >= config.LOSE_THRESHOLD_SECONDS:
-            self.state = config.LOSE
-            self.menu_index = 0
+            self.state = config.LOSE_ANIMATION
+            self.post_game_timer = 0.0
             self.doctor.set_end_state(won=False)
 
         # ---- WIN condition tracking ----
@@ -631,8 +647,8 @@ class Game:
             self.time_below_win_threshold = 0.0
 
         if self.time_below_win_threshold >= config.WIN_THRESHOLD_SECONDS:
-            self.state = config.WIN
-            self.menu_index = 0
+            self.state = config.WIN_ANIMATION
+            self.post_game_timer = 0.0
             self.doctor.set_end_state(won=True)
 
     def capture_screen_blur(self) -> pygame.Surface:
@@ -672,6 +688,12 @@ class Game:
                 self.settings_menu_index,
                 background=self.menu_background,
             )
+            pygame.display.flip()
+            return
+
+        # ---------- POST-GAME ANIMATION (only doctor, no agents) ----------
+        if self.state in (config.WIN_ANIMATION, config.LOSE_ANIMATION):
+            self.doctor.draw(self.screen)
             pygame.display.flip()
             return
 

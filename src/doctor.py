@@ -139,6 +139,19 @@ class Doctor:
         """Called by game.py when the game ends."""
         self._set_anim(AnimState.WIN if won else AnimState.LOSE)
 
+    def reset(self) -> None:
+        """Reset doctor animation and action state for a new game."""
+        self._set_anim(AnimState.IDLE)
+        self.cooldown_timer = 0.0
+        self.shot_cooldown_timer = 0.0
+        self.ammo = config.PELLET_AMMO_MAX
+        self.reload_timer = 0.0
+        self._pending_projectile = None
+        self._projectile_fired = False
+        self.pos = pygame.Vector2(config.WIDTH // 2, config.HEIGHT // 2)
+        self.target_pos = self.pos.copy()
+        self._prev_pos = self.pos.copy()
+
     # ------------------------------------------------------------------
     # Core update
     # ------------------------------------------------------------------
