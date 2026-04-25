@@ -1,6 +1,34 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.32 — Animation Bug Fixes & Post-Game Sequence
+### Added
+- **Per-Animation Scaling**: Each animation state now has its own scale factor (`DOCTOR_ANIMATION_SCALES` in config) to balance visual sizes between idle/running and shooting/injecting sprites.
+- **Post-Game Animation Sequence**: Win/Lose conditions now transition to a dedicated animation state where all agents are cleared and only the doctor is shown for 2.5 seconds before the end-game menu appears.
+
+### Fixed
+- Doctor animation getting stuck on the last frame of injecting or shooting (state never transitioned back to idle).
+- Idle animation not cycling through its frames.
+- Running animation not triggering when moving the mouse.
+- Unable to shoot or inject after the first shot action.
+- Win/Lose sprite persisting on screen after game restart.
+
+---
+
+## v0.31 — Doctor Agent Sprite Animations
+### Added
+- **Animated Doctor Sprite**: Replaced the primitive blue cross with a fully animated character sprite.
+  - **Standing (Idle)**: 4-frame looping breathing/idle animation.
+  - **Running**: 5-frame animation with distinct start, loop (frames 1–3), and end transitions triggered by mouse movement.
+  - **Shooting**: 8-frame single-action animation; vaccine pellet spawns precisely at frame 6 for visual sync.
+  - **Injecting (Cure)**: 5-frame single-action animation triggered on successful left-click cure.
+  - **Win / Lose**: 3-frame animations triggered at end-of-game.
+- **Bullet Sprite**: Projectiles now render using `bullet_transparent_bg.png` instead of a plain circle.
+- **Doctor State Machine**: Introduced `AnimState` (IDLE, RUNNING, SHOOTING, INJECTING, WIN, LOSE) with priority-based transitions and frame-accurate action synchronization.
+
+### Changed
+- **Projectile Class**: Added optional `sprite` field to `Projectile` dataclass; `draw()` blits sprite when available, falls back to circle otherwise.
+
 ## v0.30 — UI Enhancements & Modern Pause Menu
 ### Added
 - **Modern Pause Menu ('S' Key)**: Pressing 'S' now triggers a feature-rich pause overlay.
