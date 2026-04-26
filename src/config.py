@@ -21,6 +21,22 @@ TIME_SCALE_1 = 1.0
 TIME_SCALE_2 = 2.0
 TIME_SCALE_3 = 4.0
 
+# -----------------------------
+# Camera / scrolling
+# -----------------------------
+CAMERA_SMOOTHING = 0.08          # lerp factor per frame (lower = smoother/slower)
+CAMERA_DEADZONE = 5              # pixels – camera ignores tiny movements
+CAMERA_ZOOM = 2.0                # >1 zooms in (shows less world, fills screen)
+
+# World dimensions – set at runtime from the loaded map image
+WORLD_WIDTH = 1672
+WORLD_HEIGHT = 941
+
+# Collision mask – green colour in hospital_map_borders.png
+COLLISION_GREEN_THRESHOLD = 80   # min green channel to count as wall
+COLLISION_RED_MAX = 100          # max red   channel to count as wall-green
+COLLISION_BLUE_MAX = 100         # max blue  channel to count as wall-green
+
 # Fixed timestep is optional; for now we use dt from clock.tick()
 # If later we want deterministic physics, add FIXED_DT = 1/60.
 
@@ -100,16 +116,17 @@ POST_GAME_ANIM_DURATION = 2.5
 # -----------------------------
 # Simulation parameters (Agents)
 # -----------------------------
-AGENT_COUNT = 150
-AGENT_RADIUS = 14
+AGENT_COUNT = 40
+AGENT_RADIUS = 8
 
 # Speeds are in pixels per second
-AGENT_SPEED_MIN = 40
-AGENT_SPEED_MAX = 140
+AGENT_SPEED_MIN = 20
+AGENT_SPEED_MAX = 70
 
 # Random motion / wander (stochastic movement)
-WANDER_STRENGTH = 60   # px/s^2-ish feel: higher = more jitter
-MAX_SPEED = 170        # hard cap on speed (px/s)
+WANDER_STRENGTH = 30   # px/s^2-ish feel: higher = more jitter
+MAX_SPEED = 100        # hard cap on speed (px/s)
+AGENT_TARGET_REACH_DIST = 10  # px – agent picks a new target when within this distance
 
 # Agent-agent collisions
 ENABLE_AGENT_COLLISIONS = True
@@ -144,11 +161,12 @@ WIN_THRESHOLD_SECONDS = 30.0    # for this many seconds
 WIN_CHECK_WARMUP = 10.0         # seconds to wait before checking win condition
 
 # Doctor mechanics (placeholder; later)
-CURE_RADIUS = 24
+CURE_RADIUS = 18
 CURE_COOLDOWN = 0.15  # seconds between cures
 
 # Doctor follow smoothing (fixes projectile aim quantization)
-DOCTOR_FOLLOW_SPEED = 25.0  # higher = follows cursor more tightly (try 20–45)
+DOCTOR_FOLLOW_SPEED = 8.0   # lower = smoother camera-friendly movement (was 25)
+DOCTOR_MAX_SPEED = 260       # px/s hard cap so doctor can't teleport across map
 
 
 # -----------------------------
@@ -197,16 +215,16 @@ DIFFICULTY_CURVE_STEEPNESS = 0.5        # Controls curve aggressiveness (0.1 = g
 # Doctor animation
 # -----------------------------
 DOCTOR_ANIM_FPS = 12                    # frames per second for doctor animations
-DOCTOR_SPRITE_SCALE = 2.5              # default fallback scale
+DOCTOR_SPRITE_SCALE = 1.2              # default fallback scale (smaller for zoomed map)
 
 # Per-animation scale overrides (tweak these to balance visual sizes)
 DOCTOR_ANIMATION_SCALES = {
-    "standing":  1.8,
-    "running":   1.8,
-    "shooting":  2.5,
-    "injecting": 2.5,
-    "win":       2.5,
-    "lose":      2.5,
+    "standing":  1.2,
+    "running":   1.2,
+    "shooting":  1.6,
+    "injecting": 1.6,
+    "win":       1.6,
+    "lose":      1.6,
 }
 
 # Spritesheet frame rects  (x, y, w, h) – auto-detected from transparent gaps
@@ -264,7 +282,7 @@ DOCTOR_SHOOT_FIRE_FRAME = 5
 # Agent animation
 # -----------------------------
 AGENT_ANIM_FPS = 10                     # walk cycle speed for agents
-AGENT_SPRITE_SCALE = 3.2               # scale factor for agent sprites
+AGENT_SPRITE_SCALE = 3.0               # scale factor for agent sprites (smaller for zoomed map)
 
 # Spritesheet frame rects  (x, y, w, h) – auto-detected from transparent gaps
 AGENT_FRAMES = {

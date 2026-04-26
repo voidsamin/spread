@@ -54,7 +54,8 @@ class Doctor:
     """
 
     def __init__(self) -> None:
-        self.pos = pygame.Vector2(config.WIDTH // 2, config.HEIGHT // 2)
+        # Start at world centre
+        self.pos = pygame.Vector2(config.WORLD_WIDTH // 2, config.WORLD_HEIGHT // 2)
         self.target_pos = self.pos.copy()
         self.cooldown_timer = 0.0  # seconds until next cure allowed
 
@@ -148,7 +149,7 @@ class Doctor:
         self.reload_timer = 0.0
         self._pending_projectile = None
         self._projectile_fired = False
-        self.pos = pygame.Vector2(config.WIDTH // 2, config.HEIGHT // 2)
+        self.pos = pygame.Vector2(config.WORLD_WIDTH // 2, config.WORLD_HEIGHT // 2)
         self.target_pos = self.pos.copy()
         self._prev_pos = self.pos.copy()
 
@@ -156,14 +157,33 @@ class Doctor:
     # Core update
     # ------------------------------------------------------------------
 
-    def update(self, dt: float) -> None:
-        # --- Follow mouse position with smoothing ---
+    def update(self, dt: float, camera=None, hospital_map=None) -> None:
+        # --- Follow mouse position (converted to world coords) ---
         mx, my = pygame.mouse.get_pos()
-        self.target_pos.update(mx, my)
+        if camera is not None:
+            world_mouse = camera.screen_to_world((mx, my))
+        else:
+            world_mouse = pygame.Vector2(mx, my)
+        self.target_pos.update(world_mouse.x, world_mouse.y)
 
         alpha = min(1.0, config.DOCTOR_FOLLOW_SPEED * dt)
         self._prev_pos = self.pos.copy()
-        self.pos += (self.target_pos - self.pos) * alpha
+        move = (self.target_pos - self.pos) * alpha
+
+        # Clamp movement speed so doctor can't teleport
+        max_step = config.DOCTOR_MAX_SPEED * dt
+        if move.length_squared() > max_step * max_step:
+            move.scale_to_length(max_step)
+
+        self.pos += move
+
+        # --- Clamp to world bounds ---
+        self.pos.x = max(0, min(self.pos.x, config.WORLD_WIDTH))
+        self.pos.y = max(0, min(self.pos.y, config.WORLD_HEIGHT))
+
+        # --- Map collision ---
+        if hospital_map is not None and hospital_map.is_circle_colliding(self.pos.x, self.pos.y, config.AGENT_RADIUS):
+            self.pos = hospital_map.push_out_of_wall(self.pos, config.AGENT_RADIUS)
 
         # --- Aim direction ---
         aim_vec = self.target_pos - self.pos
@@ -171,7 +191,7 @@ class Doctor:
             self.aim_dir = aim_vec.normalize()
 
         # --- Facing direction (based on mouse relative to doctor) ---
-        self.facing_left = (mx < self.pos.x)
+        self.facing_left = (world_mouse.x < self.pos.x)
 
         # --- Cooldowns ---
         if self.cooldown_timer > 0:
@@ -191,7 +211,6 @@ class Doctor:
 
         # --- Animation state machine ---
         # Priority: WIN/LOSE > SHOOTING > INJECTING > RUNNING > IDLE
-        # WIN/LOSE are set externally and lock the doctor
         if self.anim_state in (AnimState.WIN, AnimState.LOSE):
             self._advance_animation(dt, loop=False)
             return
@@ -199,11 +218,9 @@ class Doctor:
         # SHOOTING: play through once, then return to idle
         if self.anim_state == AnimState.SHOOTING:
             finished = self._advance_animation(dt, loop=False)
-            # Check if we should fire the projectile this frame
             if not self._projectile_fired and self.current_frame >= config.DOCTOR_SHOOT_FIRE_FRAME:
                 self._projectile_fired = True
-                self._create_pending_projectile()
-            # Animation finished?
+                self._create_pending_projectile(camera)
             if finished:
                 self._set_anim(AnimState.IDLE)
             return
@@ -215,7 +232,7 @@ class Doctor:
                 self._set_anim(AnimState.IDLE)
             return
 
-        # Detect movement: use distance from doctor to cursor target
+        # Detect movement
         dist_to_target = (self.target_pos - self.pos).length()
         is_moving = dist_to_target > self._move_threshold
 
@@ -225,7 +242,6 @@ class Doctor:
             self._advance_running(dt)
         else:
             if self.anim_state == AnimState.RUNNING:
-                # Play the "end" frame (frame 4) before going idle
                 if self.current_frame < 4:
                     self.current_frame = 4
                     self.anim_timer = 0.0
@@ -355,10 +371,13 @@ class Doctor:
 
         return None  # projectile comes later via collect_projectile()
 
-    def _create_pending_projectile(self) -> None:
+    def _create_pending_projectile(self, camera=None) -> None:
         """Build the projectile at the moment the shooting animation fires."""
         mx, my = pygame.mouse.get_pos()
-        target = pygame.Vector2(mx, my)
+        if camera is not None:
+            target = camera.screen_to_world((mx, my))
+        else:
+            target = pygame.Vector2(mx, my)
         direction = target - self.pos
 
         if direction.length_squared() > 1e-6:
@@ -391,27 +410,31 @@ class Doctor:
     # Drawing
     # ------------------------------------------------------------------
 
-    def draw(self, surface: pygame.Surface) -> None:
+    def draw(self, surface: pygame.Surface, camera=None) -> None:
         """Draw the doctor's current animation frame centered at position."""
         frame_bank = self.frames_flipped if self.facing_left else self.frames
         frame_list = frame_bank.get(self.anim_state)
 
         if not frame_list:
-            # Fallback to idle if something went wrong
             frame_list = frame_bank[AnimState.IDLE]
 
         idx = min(self.current_frame, len(frame_list) - 1)
         sprite = frame_list[idx]
 
-        # Center the sprite on the doctor's position
-        rect = sprite.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+        # Convert world pos to screen pos
+        if camera is not None:
+            sx, sy = camera.apply(self.pos)
+        else:
+            sx, sy = int(self.pos.x), int(self.pos.y)
+
+        rect = sprite.get_rect(center=(sx, sy))
         surface.blit(sprite, rect)
 
-        # Optional: show cure radius as a thin ring (useful feedback)
+        # Show cure radius as a thin ring
         pygame.draw.circle(
             surface,
             config.DOCTOR_COLOR,
-            (int(self.pos.x), int(self.pos.y)),
+            (sx, sy),
             config.CURE_RADIUS,
             1,
         )

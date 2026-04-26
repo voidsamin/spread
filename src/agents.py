@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pygame
 
@@ -22,29 +22,42 @@ class Agent:
     strain_id: int | None = None  # None = healthy, int = specific strain ID
     susceptibility: float = 1.0   # How easily this agent gets infected
 
+    # Target-based wandering
+    target_pos: pygame.Vector2 = field(default_factory=lambda: pygame.Vector2(0, 0))
+    _wall_hit_count: int = 0      # consecutive wall collisions (for stuck detection)
+
     # Animation state (managed per-agent)
     anim_timer: float = 0.0
     current_frame: int = 0
     facing_left: bool = False
 
     def update(self, dt: float, difficulty_multiplier: float = 1.0) -> None:
-        # Stochastic "wander": small random acceleration that changes velocity gradually
-        # This makes movement look more human/random without teleporting directions.
-        jitter = pygame.Vector2(
-            random.uniform(-1, 1),
-            random.uniform(-1, 1),
-        )
+        # --- Target-based steering ---
+        to_target = self.target_pos - self.pos
+        dist = to_target.length()
 
-        if jitter.length_squared() > 0:
-            jitter = jitter.normalize()
+        if dist > config.AGENT_TARGET_REACH_DIST:
+            # Steer toward target with some wander jitter
+            desired_dir = to_target / dist  # normalize
+            jitter = pygame.Vector2(
+                random.uniform(-1, 1),
+                random.uniform(-1, 1),
+            )
+            if jitter.length_squared() > 0:
+                jitter = jitter.normalize()
+            # Blend: mostly go toward target, with some random wander
+            steer = desired_dir * 0.7 + jitter * 0.3
+            if steer.length_squared() > 0:
+                steer = steer.normalize()
+            self.vel += steer * config.WANDER_STRENGTH * dt * difficulty_multiplier
+        else:
+            # Reached target — will pick a new one in bounce_off_map_walls
+            self._wall_hit_count = 0
 
-        # Apply wander strength scaled by dt and difficulty multiplier
-        self.vel += jitter * config.WANDER_STRENGTH * dt * difficulty_multiplier
-
-        # Clamp speed so agents don't accelerate forever (scaled by difficulty)
+        # Clamp speed
         _clamp_speed(self.vel, config.MAX_SPEED * difficulty_multiplier)
 
-        # Move (velocity already affected by difficulty through wander and clamping)
+        # Move
         self.pos += self.vel * dt
 
         # Update facing direction based on horizontal velocity
@@ -56,7 +69,6 @@ class Agent:
         frame_duration = 1.0 / config.AGENT_ANIM_FPS
         if self.anim_timer >= frame_duration:
             self.anim_timer -= frame_duration
-            # Determine the correct frame count for the current animation
             if self.strain_id is not None:
                 anim_key = config.STRAIN_TO_ANIM_KEY.get(self.strain_id, "infected1")
             else:
@@ -66,6 +78,13 @@ class Agent:
                 self.current_frame = (self.current_frame + 1) % total_frames
             else:
                 self.current_frame = 0
+
+    def pick_new_target(self, hospital_map) -> None:
+        """Pick a new random walkable target position."""
+        new_target = hospital_map.find_walkable_pos(self.radius)
+        if new_target is not None:
+            self.target_pos = new_target
+        self._wall_hit_count = 0
 
 
 
@@ -86,13 +105,54 @@ class Agent:
             self.pos.y = height - self.radius
             self.vel.y *= -1
 
+    def bounce_off_map_walls(self, hospital_map) -> None:
+        """Handle collision with map walls using target-based avoidance."""
+        # World-boundary clamping first
+        w, h = hospital_map.world_w, hospital_map.world_h
+        clamped = False
+        if self.pos.x - self.radius < 0:
+            self.pos.x = self.radius
+            clamped = True
+        elif self.pos.x + self.radius > w:
+            self.pos.x = w - self.radius
+            clamped = True
+        if self.pos.y - self.radius < 0:
+            self.pos.y = self.radius
+            clamped = True
+        elif self.pos.y + self.radius > h:
+            self.pos.y = h - self.radius
+            clamped = True
+
+        # Check collision with map geometry
+        if hospital_map.is_circle_colliding(self.pos.x, self.pos.y, self.radius):
+            self.pos = hospital_map.push_out_of_wall(self.pos, self.radius)
+            self._wall_hit_count += 1
+            clamped = True
+
+        # If we hit anything or reached our target, pick a new destination
+        dist_to_target = (self.target_pos - self.pos).length()
+        if clamped or dist_to_target < config.AGENT_TARGET_REACH_DIST:
+            self.pick_new_target(hospital_map)
+            # Steer velocity toward the new target
+            to_new = self.target_pos - self.pos
+            if to_new.length_squared() > 1:
+                speed = max(self.vel.length(), config.AGENT_SPEED_MIN)
+                self.vel = to_new.normalize() * speed
+
     def draw(
         self,
         surface: pygame.Surface,
         agent_anims: dict[str, list[pygame.Surface]] | None = None,
         virus_sprites: dict[int, pygame.Surface] | None = None,
         healthy_sprite: pygame.Surface | None = None,
+        camera=None,
     ) -> None:
+        # Convert world position to screen position
+        if camera is not None:
+            sx, sy = camera.apply(self.pos)
+        else:
+            sx, sy = int(self.pos.x), int(self.pos.y)
+
         # Determine animation key
         if self.strain_id is not None:
             anim_key = config.STRAIN_TO_ANIM_KEY.get(self.strain_id, "infected1")
@@ -107,7 +167,7 @@ class Agent:
                 frame = frames[idx]
                 if self.facing_left:
                     frame = pygame.transform.flip(frame, True, False)
-                rect = frame.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+                rect = frame.get_rect(center=(sx, sy))
                 surface.blit(frame, rect)
                 return
 
@@ -115,23 +175,23 @@ class Agent:
         if self.strain_id is not None and virus_sprites:
             sprite = virus_sprites.get(self.strain_id)
             if sprite:
-                rect = sprite.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+                rect = sprite.get_rect(center=(sx, sy))
                 color = config.STRAINS[self.strain_id]["color"]
                 glow_radius = int(self.radius * 1.6) 
-                pygame.draw.circle(surface, color, (int(self.pos.x), int(self.pos.y)), glow_radius)
+                pygame.draw.circle(surface, color, (sx, sy), glow_radius)
                 surface.blit(sprite, rect)
             else:
                 color = config.STRAINS[self.strain_id]["color"]
-                pygame.draw.circle(surface, color, (int(self.pos.x), int(self.pos.y)), self.radius)
+                pygame.draw.circle(surface, color, (sx, sy), self.radius)
         elif self.strain_id is None and healthy_sprite:
-            rect = healthy_sprite.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+            rect = healthy_sprite.get_rect(center=(sx, sy))
             surface.blit(healthy_sprite, rect)
         else:
             if self.strain_id is not None:
                 color = config.STRAINS[self.strain_id]["color"]
             else:
                 color = config.HEALTHY_COLOR
-            pygame.draw.circle(surface, color, (int(self.pos.x), int(self.pos.y)), self.radius)
+            pygame.draw.circle(surface, color, (sx, sy), self.radius)
 
 
 def _random_velocity() -> pygame.Vector2:
@@ -148,9 +208,11 @@ def _is_overlapping(pos: pygame.Vector2, radius: int, agents: list[Agent]) -> bo
     return False
 
 
-def spawn_agents() -> list[Agent]:
+def spawn_agents(hospital_map=None) -> list[Agent]:
     agents: list[Agent] = []
     r = config.AGENT_RADIUS
+    world_w = getattr(config, "WORLD_WIDTH", config.WIDTH)
+    world_h = getattr(config, "WORLD_HEIGHT", config.HEIGHT)
 
     for _ in range(config.AGENT_COUNT):
         placed = False
@@ -166,28 +228,40 @@ def spawn_agents() -> list[Agent]:
         else: # uniform or default
             susc = 1.0
 
-        for _attempt in range(config.SPAWN_MAX_ATTEMPTS):
-            pos = pygame.Vector2(
-                random.uniform(r, config.WIDTH - r),
-                random.uniform(r, config.HEIGHT - r),
-            )
-            if not _is_overlapping(pos, r, agents):
-                agents.append(Agent(pos=pos, vel=_random_velocity(), radius=r, susceptibility=susc))
-                placed = True
-                break
+        # Use map-aware spawning if a map is provided
+        if hospital_map is not None:
+            for _map_attempt in range(50):
+                pos = hospital_map.find_walkable_pos(r)
+                if pos is not None and not _is_overlapping(pos, r, agents):
+                    target = hospital_map.find_walkable_pos(r) or pos.copy()
+                    agent = Agent(pos=pos, vel=_random_velocity(), radius=r,
+                                  susceptibility=susc, target_pos=target)
+                    agents.append(agent)
+                    placed = True
+                    break
 
-        # Minimal overlap tolerance if it gets too dense
         if not placed:
-            pos = pygame.Vector2(
-                random.uniform(r, config.WIDTH - r),
-                random.uniform(r, config.HEIGHT - r),
-            )
-            agents.append(Agent(pos=pos, vel=_random_velocity(), radius=r, susceptibility=susc))
+            # Fallback: world-sized random placement
+            for _attempt in range(config.SPAWN_MAX_ATTEMPTS):
+                pos = pygame.Vector2(
+                    random.uniform(r, world_w - r),
+                    random.uniform(r, world_h - r),
+                )
+                if not _is_overlapping(pos, r, agents):
+                    agents.append(Agent(pos=pos, vel=_random_velocity(), radius=r, susceptibility=susc))
+                    placed = True
+                    break
+
+            if not placed:
+                pos = pygame.Vector2(
+                    random.uniform(r, world_w - r),
+                    random.uniform(r, world_h - r),
+                )
+                agents.append(Agent(pos=pos, vel=_random_velocity(), radius=r, susceptibility=susc))
 
     # Initial infected per strain
     for strain_id, s_config in config.STRAINS.items():
         count = min(s_config.get("initial_infected", 1), len(agents))
-        # Get agents that are currently healthy
         healthy_agents = [a for a in agents if a.strain_id is None]
         if not healthy_agents:
             break

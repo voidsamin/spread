@@ -13,23 +13,35 @@ class Projectile:
     life: float  # seconds remaining
     sprite: pygame.Surface | None = field(default=None, repr=False)
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float, hospital_map=None) -> None:
         self.pos += self.vel * dt
         self.life -= dt
 
+        # Despawn on map-wall collision
+        if hospital_map is not None:
+            if hospital_map.is_wall(int(self.pos.x), int(self.pos.y)):
+                self.life = -1  # mark dead
+
     def is_dead(self) -> bool:
-        # Dead if lifetime expired or goes off-screen
+        # Dead if lifetime expired or goes off world bounds
         if self.life <= 0:
             return True
-        if self.pos.x < -50 or self.pos.x > config.WIDTH + 50:
+        world_w = getattr(config, "WORLD_WIDTH", config.WIDTH)
+        world_h = getattr(config, "WORLD_HEIGHT", config.HEIGHT)
+        if self.pos.x < -50 or self.pos.x > world_w + 50:
             return True
-        if self.pos.y < -50 or self.pos.y > config.HEIGHT + 50:
+        if self.pos.y < -50 or self.pos.y > world_h + 50:
             return True
         return False
 
-    def draw(self, surface: pygame.Surface) -> None:
+    def draw(self, surface: pygame.Surface, camera=None) -> None:
+        if camera is not None:
+            sx, sy = camera.apply(self.pos)
+        else:
+            sx, sy = int(self.pos.x), int(self.pos.y)
+
         if self.sprite is not None:
-            rect = self.sprite.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+            rect = self.sprite.get_rect(center=(sx, sy))
             surface.blit(self.sprite, rect)
         else:
-            pygame.draw.circle(surface, config.DOCTOR_COLOR, (int(self.pos.x), int(self.pos.y)), self.radius)
+            pygame.draw.circle(surface, config.DOCTOR_COLOR, (sx, sy), self.radius)

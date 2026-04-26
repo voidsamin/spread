@@ -7,6 +7,7 @@ import pygame
 
 import config
 from agents import spawn_agents, resolve_agent_collisions
+from camera import Camera
 from doctor import Doctor
 from map import HospitalMap
 from projectiles import Projectile
@@ -64,14 +65,17 @@ class Game:
         target_h = int(target_w / logo_aspect)
         self.logo = pygame.transform.smoothscale(self.logo, (target_w, target_h))
 
-        # Spawn agents
-        self.agents = spawn_agents()
+        # Hospital floor background (load BEFORE agents so we can use collision mask)
+        self.map = HospitalMap()
+
+        # Camera (smooth-follow viewport)
+        self.camera = Camera(self.map.world_w, self.map.world_h)
+
+        # Spawn agents in walkable areas of the map
+        self.agents = spawn_agents(hospital_map=self.map)
 
         # Doctor (player)
         self.doctor = Doctor()
-
-        # Hospital floor background
-        self.map = HospitalMap()
 
         # --- Agent walking animation sprites ---
         agents_dir = os.path.join(os.path.dirname(__file__), "components", "Agents")
@@ -292,7 +296,7 @@ class Game:
 
     def reset_run(self) -> None:
         """Reset a play session (used for Restart)."""
-        self.agents = spawn_agents()
+        self.agents = spawn_agents(hospital_map=self.map)
         self.projectiles.clear()
 
         # Reset stats/timers
@@ -312,6 +316,9 @@ class Game:
         
         # Reset doctor (animation + gameplay state)
         self.doctor.reset()
+
+        # Snap camera to doctor start position
+        self.camera.reset(self.doctor.pos)
 
         # Reset difficulty
         self.difficulty_multiplier = config.DIFFICULTY_START_MULTIPLIER
@@ -568,7 +575,8 @@ class Game:
     def update(self, dt: float) -> None:
         # Handle post-game animation states (tick doctor animation + timer)
         if self.state in (config.WIN_ANIMATION, config.LOSE_ANIMATION):
-            self.doctor.update(dt)
+            self.doctor.update(dt, camera=self.camera, hospital_map=self.map)
+            self.camera.update(self.doctor.pos, dt)
             self.post_game_timer += dt
             if self.post_game_timer >= config.POST_GAME_ANIM_DURATION:
                 # Transition to the final menu state
@@ -589,25 +597,28 @@ class Game:
         # Calculate current difficulty multiplier
         self.difficulty_multiplier = self.calculate_difficulty_multiplier()
         
-        # Update doctor
-        self.doctor.update(dt)
+        # Update doctor (world-space, camera-aware)
+        self.doctor.update(dt, camera=self.camera, hospital_map=self.map)
+
+        # Update camera to follow doctor
+        self.camera.update(self.doctor.pos, dt)
 
         # Collect deferred projectile from shooting animation
         proj = self.doctor.collect_projectile()
         if proj is not None:
             self.projectiles.append(proj)
 
-        # Update agents with difficulty scaling
+        # Update agents with difficulty scaling + map collisions
         for a in self.agents:
             a.update(dt, self.difficulty_multiplier)
-            a.bounce_off_walls(config.WIDTH, config.HEIGHT)
+            a.bounce_off_map_walls(self.map)
 
         if config.ENABLE_AGENT_COLLISIONS:
             resolve_agent_collisions(self.agents)
         
         # ---- Projectiles update + hit detection ----
         for p in self.projectiles:
-            p.update(dt)
+            p.update(dt, hospital_map=self.map)
 
         # Check hits (projectile vs infected agents)
         # If a projectile hits an infected agent, cure it and remove projectile.
@@ -680,7 +691,8 @@ class Game:
         return blurred
 
     def draw(self) -> None:
-        self.map.draw(self.screen)
+        # Draw scrollable map background (camera-aware, zoom-aware)
+        self.map.draw(self.screen, self.camera)
 
         # ---------- MENU ----------
         if self.state == config.MENU:
@@ -712,7 +724,7 @@ class Game:
 
         # ---------- POST-GAME ANIMATION (only doctor, no agents) ----------
         if self.state in (config.WIN_ANIMATION, config.LOSE_ANIMATION):
-            self.doctor.draw(self.screen)
+            self.doctor.draw(self.screen, camera=self.camera)
             pygame.display.flip()
             return
 
@@ -722,14 +734,14 @@ class Game:
             self.screen.blit(self.pause_screenshot, (0, 0))
         else:
             for a in self.agents:
-                a.draw(self.screen, self.agent_anims, self.strain_sprites, self.healthy_sprite)
+                a.draw(self.screen, self.agent_anims, self.strain_sprites, self.healthy_sprite, camera=self.camera)
 
             for p in self.projectiles:
-                p.draw(self.screen)
+                p.draw(self.screen, camera=self.camera)
 
             # Only draw doctor while actively playing (cleaner for overlays)
             if self.state == config.PLAYING:
-                self.doctor.draw(self.screen)
+                self.doctor.draw(self.screen, camera=self.camera)
 
         # ---------- HUD / DEBUG ----------
         # HUD should only show in PLAYING
