@@ -555,9 +555,11 @@ class Game:
                         if choice == "Resume":
                             self.state = config.PLAYING
                         elif choice == "Restart":
+                            self.sound.on_game_start()
                             self.reset_run()
                             self.state = config.PLAYING
                         elif choice == "Quit to Menu":
+                            self.sound.on_menu()
                             self.state = config.MENU
                             self.menu_index = 0
 
