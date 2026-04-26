@@ -176,11 +176,37 @@ class Game:
         # --- Sound Manager ---
         self.sound = SoundManager()
         self.sound.on_menu()
-        self._danger_music_active = False
 
         # Settings menu
         self.settings_menu_index = 0
         self.settings = [
+            {
+                "name": "Master Volume",
+                "key": "master_volume",
+                "type": "slider",
+                "value": config.MASTER_VOLUME,
+                "min": 0.0,
+                "max": 1.0,
+                "step": 0.05,
+            },
+            {
+                "name": "Music Volume",
+                "key": "music_volume",
+                "type": "slider",
+                "value": config.MUSIC_VOLUME,
+                "min": 0.0,
+                "max": 1.0,
+                "step": 0.05,
+            },
+            {
+                "name": "SFX Volume",
+                "key": "sfx_volume",
+                "type": "slider",
+                "value": config.SFX_VOLUME,
+                "min": 0.0,
+                "max": 1.0,
+                "step": 0.05,
+            },
             {
                 "name": "Difficulty Enabled",
                 "key": "difficulty_enabled",
@@ -407,6 +433,15 @@ class Game:
                 config.WIN_THRESHOLD_RATIO = value
             elif key == "win_threshold_seconds":
                 config.WIN_THRESHOLD_SECONDS = value
+            elif key == "master_volume":
+                config.MASTER_VOLUME = value
+            elif key == "music_volume":
+                config.MUSIC_VOLUME = value
+            elif key == "sfx_volume":
+                config.SFX_VOLUME = value
+
+        # Refresh sound volumes after applying
+        self.sound.apply_volume_settings()
 
     def adjust_setting(self, delta: int) -> None:
         """Adjust the currently selected setting by delta (-1 for left, +1 for right)."""
@@ -426,7 +461,7 @@ class Game:
             new_idx = (current_idx + delta) % len(options)
             setting["value"] = options[new_idx]
         
-        elif setting["type"] in ("int", "float"):
+        elif setting["type"] in ("int", "float", "slider"):
             # Adjust numeric value
             step = setting["step"]
             min_val = setting["min"]
@@ -602,9 +637,14 @@ class Game:
                 # Gameplay clicks
                 if self.state == config.PLAYING:
                     if event.button == 1:
-                        self.doctor.try_cure(self.agents)
+                        cured = self.doctor.try_cure(self.agents)
+                        if cured:
+                            self.sound.play_sfx("inject_sfx")
                     elif event.button == 3:
+                        ammo_before = self.doctor.ammo
                         self.doctor.try_shoot()
+                        if self.doctor.ammo < ammo_before:
+                            self.sound.play_sfx("shot_sfx")
 
 
 
@@ -668,6 +708,7 @@ class Game:
                 if (a.pos - p.pos).length_squared() <= (a.radius + p.radius) ** 2:
                     a.strain_id = None
                     hit = True
+                    self.sound.play_sfx("hit_sfx")
                     break
             if (not hit) and (not p.is_dead()):
                 survivors.append(p)
@@ -719,15 +760,8 @@ class Game:
             self.doctor.set_end_state(won=True)
             self.sound.on_win()
 
-        # ---- Dynamic music: danger vs normal ----
-        if self.infected_ratio >= config.DANGER_THRESHOLD:
-            if not self._danger_music_active:
-                self.sound.on_danger()
-                self._danger_music_active = True
-        else:
-            if self._danger_music_active:
-                self.sound.on_safe()
-                self._danger_music_active = False
+        # ---- Smooth music cross-fade (every frame) ----
+        self.sound.update_music(dt, self.infected_ratio)
 
     def capture_screen_blur(self) -> pygame.Surface:
         """Capture the current screen and apply a simple blur effect."""

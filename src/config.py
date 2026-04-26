@@ -51,18 +51,29 @@ SOUND_FILES = {
     "danger_music":     "lose-threshold-loop.mp3",
     "win_sfx":          "win-sound-effect.mp3",
     "lose_sfx":         "game-over.mp3",
+    "inject_sfx":       "inject-sound.mp3",
+    "shot_sfx":         "projectile-shot.mp3",
+    "hit_sfx":          "projectile-hit.mp3",
 }
 
-# Volume levels (0.0 – 1.0)
-VOL_MENU_MUSIC   = 0.4
-VOL_GAME_MUSIC   = 0.35
-VOL_DANGER_MUSIC = 0.5
-VOL_SFX          = 0.6
-VOL_WIN_SFX      = 0.7
-VOL_LOSE_SFX     = 0.7
-VOL_GAME_START   = 0.6
+# Global volume hierarchy  (final vol = specific * category * master)
+MASTER_VOLUME = 1.0      # overall
+MUSIC_VOLUME  = 0.8      # music category
+SFX_VOLUME    = 0.8      # sfx category
 
-MUSIC_FADE_MS    = 1500   # cross-fade duration in ms
+# Per-track base levels (before category/master scaling)
+VOL_MENU_MUSIC   = 0.5
+VOL_GAME_MUSIC   = 0.45
+VOL_DANGER_MUSIC = 0.6
+VOL_GAME_START   = 0.7
+VOL_WIN_SFX      = 0.8
+VOL_LOSE_SFX     = 0.8
+VOL_MENU_SELECT  = 0.7
+VOL_INJECT       = 0.6
+VOL_SHOT         = 0.5
+VOL_HIT          = 0.7
+
+CROSSFADE_SPEED  = 1.5    # how fast (per second) the danger/normal blend shifts (0→1)
 DANGER_THRESHOLD = 0.6    # infection ratio at which danger music kicks in
 
 

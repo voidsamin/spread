@@ -713,8 +713,45 @@ def draw_settings_menu(
         name_rect = name_surf.get_rect(midleft=(bar_rect.left + 12, bar_rect.centery))
         surface.blit(name_surf, name_rect)
 
-        # Setting value (right-aligned inside bar)
-        if setting["type"] != "action":
+        # --- Slider type ---
+        if setting["type"] == "slider":
+            value = setting["value"]
+            min_v = setting["min"]
+            max_v = setting["max"]
+            ratio = (value - min_v) / max(0.001, max_v - min_v)
+
+            # Slider track area (right half of the bar)
+            slider_w = 160
+            slider_h = 8
+            slider_x = bar_rect.right - slider_w - 60
+            slider_y = bar_rect.centery - slider_h // 2
+
+            # Track background
+            track_rect = pygame.Rect(slider_x, slider_y, slider_w, slider_h)
+            pygame.draw.rect(surface, (60, 60, 60), track_rect, border_radius=4)
+
+            # Filled portion
+            fill_w = int(slider_w * ratio)
+            if fill_w > 0:
+                fill_rect = pygame.Rect(slider_x, slider_y, fill_w, slider_h)
+                fill_color = (80, 180, 255) if is_sel else (100, 140, 180)
+                pygame.draw.rect(surface, fill_color, fill_rect, border_radius=4)
+
+            # Knob
+            knob_x = slider_x + fill_w
+            knob_r = 7
+            knob_color = (255, 255, 255) if is_sel else (180, 180, 180)
+            pygame.draw.circle(surface, knob_color, (knob_x, bar_rect.centery), knob_r)
+
+            # Percentage text
+            pct_str = f"{int(ratio * 100)}%"
+            pct_color = (100, 200, 255) if is_sel else (150, 150, 150)
+            pct_surf = ui_font.render(pct_str, True, pct_color)
+            pct_rect = pct_surf.get_rect(midright=(bar_rect.right - 12, bar_rect.centery))
+            surface.blit(pct_surf, pct_rect)
+
+        # --- Other value types ---
+        elif setting["type"] != "action":
             value = setting["value"]
 
             if setting["type"] == "bool":

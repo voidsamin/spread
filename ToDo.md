@@ -148,10 +148,10 @@ Deliverable: A playable loop from menu → play → end → restart.
 ---
 
 ## 11) Audio + assets (Week 5)
-- [ ] (☆) Add click cure sound
-- [ ] (☆) Add pellet shoot sound
-- [ ] (☆) Add subtle background loop
-- [ ] (☆) Add hit/impact sound for collisions (careful: can get noisy)
+- [x] (☆) Add click cure sound
+- [x] (☆) Add pellet shoot sound
+- [x] (☆) Add subtle background loop
+- [x] (☆) Add hit/impact sound for collisions (careful: can get noisy)
 - [x] (☆) Add simple sprites (optional; circles are fine for MVP)
 
 Deliverable: Basic audio feedback improves feel.

@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.37 — Audio & Settings Polish
+### Added
+- **New SFX**: Added projectile shoot, hit and click-to-cure SFX.
+- **Audio Settings**: Added Master, Music, and SFX volume sliders to the Settings menu.
+- **Smooth Transitions**: Implemented smooth cross-fade transitions between safe and danger background music based on infection levels.
+
+### Changed
+- **Settings Menu**: Completely redesigned settings menu to include volume controls and simplified layout.
+- **Pause Menu**: Updated pause menu to include volume sliders.
+- **Music System**: Refactored `SoundManager` to handle dynamic volume adjustments and smooth transitions.
+- **In-Game HUD**: Removed "Danger Mode" text and added a visual pulse effect to the background when infection is critical.
+
 ## v0.36 — Sound Effects & UI Polishing
 ### Added
 - **Sound Effects**: Added sound effects for menu clicks, game start effect, win effect, lose effect and background music loops.
