@@ -26,6 +26,12 @@ class Agent:
     target_pos: pygame.Vector2 = field(default_factory=lambda: pygame.Vector2(0, 0))
     _wall_hit_count: int = 0      # consecutive wall collisions (for stuck detection)
 
+    # Idle / waiting state
+    idle_timer: float = 0.0       # >0 means agent is idling (not moving)
+
+    # Per-agent speed multiplier (randomised at spawn for variation)
+    speed_factor: float = 1.0
+
     # Animation state (managed per-agent)
     anim_timer: float = 0.0
     current_frame: int = 0
@@ -54,8 +60,9 @@ class Agent:
             # Reached target — will pick a new one in bounce_off_map_walls
             self._wall_hit_count = 0
 
-        # Clamp speed
-        _clamp_speed(self.vel, config.MAX_SPEED * difficulty_multiplier)
+        # Clamp speed (scaled by personal speed_factor)
+        effective_max = config.MAX_SPEED * difficulty_multiplier * self.speed_factor
+        _clamp_speed(self.vel, effective_max)
 
         # Move
         self.pos += self.vel * dt
@@ -79,11 +86,38 @@ class Agent:
             else:
                 self.current_frame = 0
 
-    def pick_new_target(self, hospital_map) -> None:
-        """Pick a new random walkable target position."""
-        new_target = hospital_map.find_walkable_pos(self.radius)
-        if new_target is not None:
-            self.target_pos = new_target
+    def pick_new_target(self, hospital_map, all_agents: list[Agent] | None = None) -> None:
+        """Pick a new random walkable target, avoiding crowded areas."""
+        best_target = None
+        best_crowd = 999
+
+        # Try a few candidates and pick the least-crowded one
+        for _ in range(5):
+            candidate = hospital_map.find_walkable_pos(self.radius)
+            if candidate is None:
+                continue
+
+            if all_agents is None:
+                best_target = candidate
+                break
+
+            # Count how many agents are targeting near this candidate
+            crowd = 0
+            for other in all_agents:
+                if other is self:
+                    continue
+                if (other.target_pos - candidate).length_squared() < config.AGENT_SOCIAL_DISTANCE ** 2:
+                    crowd += 1
+
+            if crowd < best_crowd:
+                best_crowd = crowd
+                best_target = candidate
+
+            if crowd == 0:
+                break  # perfect — no one else is heading there
+
+        if best_target is not None:
+            self.target_pos = best_target
         self._wall_hit_count = 0
 
 
@@ -105,7 +139,7 @@ class Agent:
             self.pos.y = height - self.radius
             self.vel.y *= -1
 
-    def bounce_off_map_walls(self, hospital_map) -> None:
+    def bounce_off_map_walls(self, hospital_map, all_agents: list[Agent] | None = None) -> None:
         """Handle collision with map walls using target-based avoidance."""
         # World-boundary clamping first
         w, h = hospital_map.world_w, hospital_map.world_h
@@ -132,11 +166,11 @@ class Agent:
         # If we hit anything or reached our target, pick a new destination
         dist_to_target = (self.target_pos - self.pos).length()
         if clamped or dist_to_target < config.AGENT_TARGET_REACH_DIST:
-            self.pick_new_target(hospital_map)
+            self.pick_new_target(hospital_map, all_agents)
             # Steer velocity toward the new target
             to_new = self.target_pos - self.pos
             if to_new.length_squared() > 1:
-                speed = max(self.vel.length(), config.AGENT_SPEED_MIN)
+                speed = max(self.vel.length(), config.AGENT_SPEED_MIN * self.speed_factor)
                 self.vel = to_new.normalize() * speed
 
     def draw(
@@ -229,13 +263,18 @@ def spawn_agents(hospital_map=None) -> list[Agent]:
             susc = 1.0
 
         # Use map-aware spawning if a map is provided
+        speed_f = random.uniform(
+            1.0 - config.AGENT_SPEED_VARIATION,
+            1.0 + config.AGENT_SPEED_VARIATION,
+        )
         if hospital_map is not None:
             for _map_attempt in range(50):
                 pos = hospital_map.find_walkable_pos(r)
                 if pos is not None and not _is_overlapping(pos, r, agents):
                     target = hospital_map.find_walkable_pos(r) or pos.copy()
                     agent = Agent(pos=pos, vel=_random_velocity(), radius=r,
-                                  susceptibility=susc, target_pos=target)
+                                  susceptibility=susc, target_pos=target,
+                                  speed_factor=speed_f)
                     agents.append(agent)
                     placed = True
                     break
@@ -269,6 +308,35 @@ def spawn_agents(hospital_map=None) -> list[Agent]:
             a.strain_id = strain_id
 
     return agents
+
+
+def apply_social_distancing(agents: list[Agent], dt: float) -> None:
+    """Apply soft repulsion between nearby agents to prevent clumping.
+
+    This is O(N^2) but very cheap per pair (just a vector add).
+    For 40-100 agents this is fine.
+    """
+    sd = config.AGENT_SOCIAL_DISTANCE
+    sd_sq = sd * sd
+    strength = config.AGENT_REPULSION_STRENGTH
+
+    for i in range(len(agents)):
+        a = agents[i]
+        for j in range(i + 1, len(agents)):
+            b = agents[j]
+            delta = b.pos - a.pos
+            dist_sq = delta.length_squared()
+
+            if dist_sq >= sd_sq or dist_sq == 0:
+                continue
+
+            dist = dist_sq ** 0.5
+            # Force is stronger the closer they are (inverse linear)
+            factor = (1.0 - dist / sd) * strength * dt
+            push = (delta / dist) * factor
+
+            a.vel -= push
+            b.vel += push
 
 def try_spread_infection(a: Agent, b: Agent) -> None:
     """

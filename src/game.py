@@ -6,7 +6,7 @@ import sys
 import pygame
 
 import config
-from agents import spawn_agents, resolve_agent_collisions
+from agents import spawn_agents, resolve_agent_collisions, apply_social_distancing
 from camera import Camera
 from doctor import Doctor
 from map import HospitalMap
@@ -687,7 +687,10 @@ class Game:
         # Update agents with difficulty scaling + map collisions
         for a in self.agents:
             a.update(dt, self.difficulty_multiplier)
-            a.bounce_off_map_walls(self.map)
+            a.bounce_off_map_walls(self.map, all_agents=self.agents)
+
+        # Social distancing — soft repulsion before hard collision
+        apply_social_distancing(self.agents, dt)
 
         if config.ENABLE_AGENT_COLLISIONS:
             resolve_agent_collisions(self.agents)

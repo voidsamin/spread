@@ -162,7 +162,19 @@ AGENT_SPEED_MAX = 70
 # Random motion / wander (stochastic movement)
 WANDER_STRENGTH = 30   # px/s^2-ish feel: higher = more jitter
 MAX_SPEED = 100        # hard cap on speed (px/s)
-AGENT_TARGET_REACH_DIST = 10  # px – agent picks a new target when within this distance
+AGENT_TARGET_REACH_DIST = 14  # px – agent picks a new target when within this distance
+
+# Social distancing — soft repulsion before hard collision
+AGENT_SOCIAL_DISTANCE = 55    # radius where agents start feeling crowded (px)
+AGENT_REPULSION_STRENGTH = 20.0  # steering force strength
+
+# Idle / waiting — stagger hallway traffic
+AGENT_IDLE_PROBABILITY = 0.25   # chance to wait after reaching a target
+AGENT_IDLE_TIME_MIN = 1.0       # seconds
+AGENT_IDLE_TIME_MAX = 4.0       # seconds
+
+# Speed variation — prevents "trains" of identically-paced agents
+AGENT_SPEED_VARIATION = 0.15    # ±15% randomised at spawn
 
 # Agent-agent collisions
 ENABLE_AGENT_COLLISIONS = True
