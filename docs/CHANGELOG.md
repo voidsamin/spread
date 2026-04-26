@@ -1,6 +1,24 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.35 — Map Update & Camera System
+### Added
+- **Map**: Added a new map with rooms, objects and hallways.
+- **Border Map**: A copy map with only collision borders masking defined.
+- **Camera**: Added a camera system that follows the doctor around the map.
+
+### Changed
+- **Border Collision**: Border collision is not only based on coordinates now, is also based on masking map, so agents can't go outside the map.
+- **Drawing**: Map and agents are pre-laoded, drawn when camera changes to that section of the map, this makes the game run smoother.
+- **Objects**: Added more objects to the map, like tables, chairs, etc.
+- **Object detection**: Added object detection (via masking), so agents can't go through objects.
+- **Scaled down sprites**: All sprites (doctors and agents) are scaled down to fit in the map
+
+### Fixed
+- **Agent jittering**: Agents were jittering around the map due to object detection, this has been fixed.
+- **Agent offset**: Agents were offset from their center, this has been fixed.
+- **Map drawing**: Map was drawn multiple times, this has been fixed.
+
 ## v0.34 — Agent Animation Sprites
 ### Added
 - **Agent Animation Sprites**: Added animation sprites for healthy agents and infected agents (three strains) using spritesheets.

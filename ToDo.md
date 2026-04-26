@@ -200,11 +200,11 @@ Deliverable: The project demonstrates clear computational modeling and statistic
 ---
 
 ## 14) Hospital Simulation Assets & Animations (The "Simulation Feel" Update)
-- [ ] (★) Design/Import hospital-themed background map (floors, walls, zones)
-- [ ] (★) Replace agent circles with detailed character sprites (Doctor, Patient, Infected)
-- [ ] (★) Implement frame-based walking animations for all agent types
-- [ ] (★) Add particle effects or animations for curing and infection spread
-- [ ] (☆) Add decorative hospital assets (beds, equipment, medical signs)
+- [x] (★) Design/Import hospital-themed background map (floors, walls, zones)
+- [x] (★) Replace agent circles with detailed character sprites (Doctor, Patient, Infected)
+- [x] (★) Implement frame-based walking animations for all agent types
+- [x] (★) Add particle effects or animations for curing and infection spread
+- [x] (☆) Add decorative hospital assets (beds, equipment, medical signs)
 
 ---
 
