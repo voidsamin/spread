@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented here.
 
+## v0.36 — Sound Effects & UI Polishing
+### Added
+- **Sound Effects**: Added sound effects for menu clicks, game start effect, win effect, lose effect and background music loops.
+- **Menu Refresh**: Completely redesigned main menu, settings menu, pause menu, and end-of-game screens with cleaner layouts and better readability.
+
+### Changed
+- **Pause Menu**: Replaced the "How to Play" overlay with a modern pause menu accessible via 'S' key (or Esc/S in-game).
+- **Settings Menu**: Enhanced the settings menu to include toggles for difficulty multiplier and a dropdown for selecting statistical infection models.
+- **Audio System**: Created a dedicated `Sounds` class to manage all in-game audio with clear API for game events.
+
 ## v0.35 — Map Update & Camera System
 ### Added
 - **Map**: Added a new map with rooms, objects and hallways.
