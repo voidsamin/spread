@@ -11,6 +11,7 @@ from camera import Camera
 from doctor import Doctor
 from map import HospitalMap
 from projectiles import Projectile
+from sounds import SoundManager
 from ui import draw_fps, draw_hud, draw_infection_curve, draw_menu, draw_settings_menu, draw_pause_overlay
 
 
@@ -171,6 +172,11 @@ class Game:
         
         # Time scale (fast forward)
         self.time_scale = config.TIME_SCALE_1
+
+        # --- Sound Manager ---
+        self.sound = SoundManager()
+        self.sound.on_menu()
+        self._danger_music_active = False
 
         # Settings menu
         self.settings_menu_index = 0
@@ -452,8 +458,10 @@ class Game:
                     elif event.key in (pygame.K_DOWN, pygame.K_s):
                         self.menu_index = (self.menu_index + 1) % len(self.main_menu_options)
                     elif event.key == pygame.K_RETURN:
+                        self.sound.on_menu_select()
                         choice = self.main_menu_options[self.menu_index]
                         if choice == "Start":
+                            self.sound.on_game_start()
                             self.reset_run()
                             self.state = config.PLAYING
                         elif choice == "Settings":
@@ -465,7 +473,7 @@ class Game:
                 # ---------- SETTINGS ----------
                 elif self.state == config.SETTINGS:
                     if event.key == pygame.K_ESCAPE:
-                        # Cancel and return to menu
+                        self.sound.on_menu_select()
                         self.state = config.MENU
                         self.menu_index = 0
                     elif event.key in (pygame.K_UP, pygame.K_w):
@@ -479,6 +487,7 @@ class Game:
                     elif event.key == pygame.K_RETURN:
                         # Check if "Apply & Back" is selected
                         if self.settings[self.settings_menu_index]["type"] == "action":
+                            self.sound.on_menu_select()
                             self.apply_settings()
                             self.state = config.MENU
                             self.menu_index = 0
@@ -524,32 +533,44 @@ class Game:
                     elif event.key in (pygame.K_DOWN, pygame.K_s):
                         self.menu_index = (self.menu_index + 1) % len(self.end_menu_options)
                     elif event.key == pygame.K_RETURN:
+                        self.sound.on_menu_select()
                         choice = self.end_menu_options[self.menu_index]
                         if choice == "Restart":
+                            self.sound.on_game_start()
                             self.reset_run()
                             self.state = config.PLAYING
                         elif choice == "Quit to Menu":
+                            self.sound.on_menu()
                             self.state = config.MENU
                             self.menu_index = 0
                         elif choice == "Quit":
                             self.running = False
                     elif event.key == pygame.K_r:
+                        self.sound.on_game_start()
                         self.reset_run()
                         self.state = config.PLAYING
                     elif event.key == pygame.K_m:
+                        self.sound.on_menu()
                         self.state = config.MENU
                         self.menu_index = 0
                     elif event.key == pygame.K_ESCAPE:
+                        self.sound.on_menu()
                         self.state = config.MENU
                         self.menu_index = 0
 
             elif event.type == pygame.MOUSEMOTION:
-                # Hover selection for menus
+                # Hover selection for menus (including settings)
                 if self.state in (config.MENU, config.PAUSED, config.WIN, config.LOSE):
                     mx, my = event.pos
                     for i, r in enumerate(self.menu_option_rects or []):
                         if r.collidepoint(mx, my):
                             self.menu_index = i
+                            break
+                elif self.state == config.SETTINGS:
+                    mx, my = event.pos
+                    for i, r in enumerate(self.menu_option_rects or []):
+                        if r.collidepoint(mx, my):
+                            self.settings_menu_index = i
                             break
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -559,8 +580,23 @@ class Game:
                     for i, r in enumerate(self.menu_option_rects or []):
                         if r.collidepoint(mx, my):
                             self.menu_index = i
-                            # Simulate pressing Enter
+                            self.sound.on_menu_select()
                             pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN))
+                            return
+
+                # Settings clicks (left click to toggle/activate, right click not used)
+                if event.button == 1 and self.state == config.SETTINGS:
+                    mx, my = event.pos
+                    for i, r in enumerate(self.menu_option_rects or []):
+                        if r.collidepoint(mx, my):
+                            self.settings_menu_index = i
+                            self.sound.on_menu_select()
+                            # If it's an action, treat as Enter
+                            if self.settings[i]["type"] == "action":
+                                pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN))
+                            else:
+                                # Click on a setting toggles/cycles it forward
+                                self.adjust_setting(1)
                             return
 
                 # Gameplay clicks
@@ -668,6 +704,7 @@ class Game:
             self.state = config.LOSE_ANIMATION
             self.post_game_timer = 0.0
             self.doctor.set_end_state(won=False)
+            self.sound.on_lose()
 
         # ---- WIN condition tracking ----
         # Added warmup period to prevent instant-win at game start
@@ -680,6 +717,17 @@ class Game:
             self.state = config.WIN_ANIMATION
             self.post_game_timer = 0.0
             self.doctor.set_end_state(won=True)
+            self.sound.on_win()
+
+        # ---- Dynamic music: danger vs normal ----
+        if self.infected_ratio >= config.DANGER_THRESHOLD:
+            if not self._danger_music_active:
+                self.sound.on_danger()
+                self._danger_music_active = True
+        else:
+            if self._danger_music_active:
+                self.sound.on_safe()
+                self._danger_music_active = False
 
     def capture_screen_blur(self) -> pygame.Surface:
         """Capture the current screen and apply a simple blur effect."""
@@ -703,7 +751,6 @@ class Game:
                 self.logo,
                 self.main_menu_options,
                 self.menu_index,
-                subtitle="Up/Down Arrow Keys + Enter",
                 background=self.menu_background,
             )
             pygame.display.flip()
@@ -807,7 +854,6 @@ class Game:
                 "YOU WIN",
                 self.end_menu_options,
                 self.menu_index,
-                subtitle="R = Restart, M = Menu, Q = Quit",
                 background=self.menu_background,
             )
 
@@ -819,7 +865,6 @@ class Game:
                 "YOU LOSE",
                 self.end_menu_options,
                 self.menu_index,
-                subtitle="R = Restart, M = Menu, Q = Quit",
                 background=self.menu_background,
             )
 

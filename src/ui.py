@@ -568,11 +568,6 @@ def draw_menu(
     else:
         title_surf = title_font.render(title, True, config.UI_COLOR)
 
-    # --- Subtitle ---
-    sub_surf = None
-    if subtitle:
-        sub_surf = ui_font.render(subtitle, True, (180, 180, 180))
-
     # --- Options ---
     rendered_options = []
     for opt_text in options:
@@ -583,26 +578,15 @@ def draw_menu(
     # --- Dynamic Panel Sizing ---
     margin_v = 30
     margin_h = 40
-    option_gap = 10
-    
-    # Width: Max of logo, subtitle, and options + horizontal margins
-    content_w = title_surf.get_width()
-    if sub_surf:
-        content_w = max(content_w, sub_surf.get_width())
-    for (sn, ss) in rendered_options:
-        content_w = max(content_w, sn.get_width() + 40) # 40 for selection markers
-    
-    panel_w = content_w + margin_h * 2
-    
-    # Height: Sum of components + vertical margins
-    content_h = title_surf.get_height() + 20 # Title height + gap
-    if sub_surf:
-        content_h += sub_surf.get_height() + 20
-    
-    content_h += len(options) * 30 # Options (assume 30px per line)
-    
+    bar_height = 44
+    bar_gap = 8
+    bar_w = 320
+
+    content_w = max(title_surf.get_width(), bar_w) + margin_h * 2
+    panel_w = content_w
+    content_h = title_surf.get_height() + 30 + len(options) * (bar_height + bar_gap)
     panel_h = content_h + margin_v * 2
-    
+
     panel_x = (config.WIDTH - panel_w) // 2
     panel_y = (config.HEIGHT - panel_h) // 2
     panel_rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
@@ -612,37 +596,42 @@ def draw_menu(
 
     # --- Rendering ---
     curr_y = panel_y + margin_v
-    
+
     # Logo / Title
     title_rect = title_surf.get_rect(centerx=config.WIDTH // 2, top=curr_y)
     surface.blit(title_surf, title_rect)
-    curr_y = title_rect.bottom + 15
+    curr_y = title_rect.bottom + 25
 
-    # Subtitle
-    if sub_surf:
-        sub_rect = sub_surf.get_rect(centerx=config.WIDTH // 2, top=curr_y)
-        surface.blit(sub_surf, sub_rect)
-        curr_y = sub_rect.bottom + 20
-    else:
-        curr_y += 10
-
-    # Options
+    # Options as bar buttons
     option_rects: list[pygame.Rect] = []
     for i, (sn, ss) in enumerate(rendered_options):
         is_sel = (i == selected_index)
-        surf = ss if is_sel else sn
-        rect = surf.get_rect(centerx=config.WIDTH // 2, top=curr_y)
-        surface.blit(surf, rect)
 
+        # Bar rectangle
+        bar_rect = pygame.Rect(
+            config.WIDTH // 2 - bar_w // 2,
+            curr_y,
+            bar_w,
+            bar_height,
+        )
+
+        # Draw bar background
+        bar_surf = pygame.Surface((bar_w, bar_height), pygame.SRCALPHA)
         if is_sel:
-            marker = ui_font.render(">>", True, (255, 255, 255))
-            mrect = marker.get_rect(midright=(rect.left - 10, rect.centery))
-            surface.blit(marker, mrect)
+            bar_surf.fill((80, 160, 230, 120))   # Bright blue glow
+        else:
+            bar_surf.fill((255, 255, 255, 30))    # Subtle translucent
+        pygame.draw.rect(bar_surf, (255, 255, 255, 60 if is_sel else 25),
+                         bar_surf.get_rect(), 1, border_radius=8)
+        surface.blit(bar_surf, bar_rect)
 
-        # Expand clickable area
-        click_rect = rect.inflate(panel_w // 2, 8)
-        option_rects.append(click_rect)
-        curr_y += 30
+        # Text centred inside bar
+        surf = ss if is_sel else sn
+        text_rect = surf.get_rect(center=bar_rect.center)
+        surface.blit(surf, text_rect)
+
+        option_rects.append(bar_rect)
+        curr_y += bar_height + bar_gap
 
     return option_rects
 
@@ -655,7 +644,7 @@ def draw_settings_menu(
     selected_index: int,
     background: pygame.Surface | None = None,
 ) -> list[pygame.Rect]:
-    """Draw the settings menu with adjustable values."""
+    """Draw the settings menu with adjustable values in bar-style rows."""
     # Draw background image or dim overlay
     if background is not None:
         surface.blit(background, (0, 0))
@@ -665,12 +654,13 @@ def draw_settings_menu(
         surface.blit(overlay, (0, 0))
 
     # Dynamic panel sizing based on number of settings
-    line_height = 32
-    header_height = 110  # Space for title, subtitle, and padding
+    bar_height = 36
+    bar_gap = 4
+    header_height = 80
     min_panel_h = 400
-    content_h = len(settings) * line_height + header_height + 40  # +40 for bottom padding
-    panel_h = max(min_panel_h, min(content_h, int(config.HEIGHT * 0.85)))  # Cap at 85% of screen height
-    
+    content_h = len(settings) * (bar_height + bar_gap) + header_height + 40
+    panel_h = max(min_panel_h, min(content_h, int(config.HEIGHT * 0.85)))
+
     panel_w = 600
     panel_x = (config.WIDTH - panel_w) // 2
     panel_y = (config.HEIGHT - panel_h) // 2
@@ -684,41 +674,49 @@ def draw_settings_menu(
     title_rect = title_surf.get_rect(center=(config.WIDTH // 2, panel_y + 40))
     surface.blit(title_surf, title_rect)
 
-    # Subtitle
-    subtitle = "← → to adjust, Enter to apply, Esc to cancel"
-    sub_surf = ui_font.render(subtitle, True, (180, 180, 180))
-    sub_rect = sub_surf.get_rect(center=(config.WIDTH // 2, panel_y + 75))
-    surface.blit(sub_surf, sub_rect)
-
     # Settings list with scrolling support if needed
     option_rects: list[pygame.Rect] = []
-    start_y = panel_y + 110
-    max_visible = (panel_h - header_height - 20) // line_height
-    
+    start_y = panel_y + header_height
+    max_visible = (panel_h - header_height - 20) // (bar_height + bar_gap)
+
     # Scroll to keep selected item visible
     scroll_offset = 0
     if selected_index >= max_visible:
         scroll_offset = selected_index - max_visible + 1
 
+    bar_inner_w = panel_w - 40  # 20px padding each side
+
     for i, setting in enumerate(settings):
         # Skip items outside the visible range
         if i < scroll_offset or i >= scroll_offset + max_visible:
             continue
-            
-        is_sel = (i == selected_index)
-        y_pos = start_y + (i - scroll_offset) * line_height
 
-        # Setting name
+        is_sel = (i == selected_index)
+        y_pos = start_y + (i - scroll_offset) * (bar_height + bar_gap)
+
+        # Bar rectangle
+        bar_rect = pygame.Rect(panel_x + 20, y_pos, bar_inner_w, bar_height)
+
+        # Draw bar background
+        bar_surf = pygame.Surface((bar_inner_w, bar_height), pygame.SRCALPHA)
+        if is_sel:
+            bar_surf.fill((80, 160, 230, 100))
+        else:
+            bar_surf.fill((255, 255, 255, 20))
+        pygame.draw.rect(bar_surf, (255, 255, 255, 50 if is_sel else 15),
+                         bar_surf.get_rect(), 1, border_radius=6)
+        surface.blit(bar_surf, bar_rect)
+
+        # Setting name (left-aligned inside bar)
         name_color = (255, 255, 255) if is_sel else (200, 200, 200)
         name_surf = ui_font.render(setting["name"], True, name_color)
-        name_rect = name_surf.get_rect(midleft=(panel_x + 30, y_pos))
+        name_rect = name_surf.get_rect(midleft=(bar_rect.left + 12, bar_rect.centery))
         surface.blit(name_surf, name_rect)
 
-        # Setting value (right-aligned)
+        # Setting value (right-aligned inside bar)
         if setting["type"] != "action":
             value = setting["value"]
-            
-            # Format value based on type
+
             if setting["type"] == "bool":
                 value_str = "ON" if value else "OFF"
             elif setting["type"] == "float":
@@ -729,20 +727,20 @@ def draw_settings_menu(
                 value_str = value
             else:
                 value_str = str(value)
-            
+
             value_color = (100, 200, 255) if is_sel else (150, 150, 150)
             value_surf = ui_font.render(value_str, True, value_color)
-            value_rect = value_surf.get_rect(midright=(panel_x + panel_w - 30, y_pos))
+            value_rect = value_surf.get_rect(midright=(bar_rect.right - 12, bar_rect.centery))
             surface.blit(value_surf, value_rect)
 
-        # Selection marker
-        if is_sel:
-            marker = ui_font.render(">>", True, name_color)
-            mrect = marker.get_rect(midright=(name_rect.left - 10, y_pos))
-            surface.blit(marker, mrect)
+            # Draw left/right arrows when selected
+            if is_sel:
+                arrow_l = ui_font.render("◄", True, (100, 200, 255))
+                arrow_r = ui_font.render("►", True, (100, 200, 255))
+                surface.blit(arrow_l, arrow_l.get_rect(midright=(value_rect.left - 8, bar_rect.centery)))
+                surface.blit(arrow_r, arrow_r.get_rect(midleft=(value_rect.right + 8, bar_rect.centery)))
 
         # Create clickable rect
-        click_rect = pygame.Rect(panel_x + 20, y_pos - 12, panel_w - 40, line_height - 4)
-        option_rects.append(click_rect)
+        option_rects.append(bar_rect)
 
     return option_rects

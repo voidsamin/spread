@@ -40,6 +40,31 @@ COLLISION_BLUE_MAX = 100         # max blue  channel to count as wall-green
 # Fixed timestep is optional; for now we use dt from clock.tick()
 # If later we want deterministic physics, add FIXED_DT = 1/60.
 
+# -----------------------------
+# Sound / Music
+# -----------------------------
+SOUND_FILES = {
+    "menu_music":       "menu-screen-sound-loop.mp3",
+    "menu_select":      "menu-selection.mp3",
+    "game_start":       "game-start.mp3",
+    "game_music":       "game-music-loop.mp3",
+    "danger_music":     "lose-threshold-loop.mp3",
+    "win_sfx":          "win-sound-effect.mp3",
+    "lose_sfx":         "game-over.mp3",
+}
+
+# Volume levels (0.0 – 1.0)
+VOL_MENU_MUSIC   = 0.4
+VOL_GAME_MUSIC   = 0.35
+VOL_DANGER_MUSIC = 0.5
+VOL_SFX          = 0.6
+VOL_WIN_SFX      = 0.7
+VOL_LOSE_SFX     = 0.7
+VOL_GAME_START   = 0.6
+
+MUSIC_FADE_MS    = 1500   # cross-fade duration in ms
+DANGER_THRESHOLD = 0.6    # infection ratio at which danger music kicks in
+
 
 # -----------------------------
 # Colors (RGB)
